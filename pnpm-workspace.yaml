@@ -1,0 +1,10 @@
+packages:
+  - '.'
+
+ignoredBuiltDependencies:
+  - core-js
+  - core-js-pure
+
+onlyBuiltDependencies:
+  - '@biomejs/biome'
+  - esbuild
