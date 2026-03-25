@@ -37,6 +37,7 @@ const Modal = ({ isModalOpen, onClose, children }: Props) => {
 				<button
 					type="button"
 					onClick={onClose}
+					aria-label="Close"
 					className="absolute top-4 right-4 border-none p-0 text-2xl bg-transparent leading-none"
 				>
 					×
