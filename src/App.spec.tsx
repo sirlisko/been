@@ -14,11 +14,6 @@ vi.mock("./lib/supabase", () => ({
 	},
 }));
 
-vi.mock("./lib/gifsDB", () => ({
-	loadGifs: vi.fn().mockResolvedValue({}),
-	saveGif: vi.fn().mockResolvedValue(undefined),
-}));
-
 import App from "./App";
 
 it("renders without crashing", async () => {
@@ -35,6 +30,6 @@ describe("App Component", () => {
 		await act(async () => {
 			render(<App />);
 		});
-		expect(screen.getByRole("heading").innerHTML).toEqual("Have a gify day!");
+		expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Been.");
 	});
 });
