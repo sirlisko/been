@@ -25,7 +25,7 @@ const CountryList = ({ countries, selected, onToggle }: Props) => {
 				>
 					<img
 						src={getFlagUrl(code)}
-						alt={code}
+						alt={getCountryName(code)}
 						className="w-8 h-8 rounded-full object-cover"
 					/>
 					<span className="text-sm truncate">{getCountryName(code)}</span>

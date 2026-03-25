@@ -37,6 +37,7 @@ const WorldMap = ({ selected, highlighted = [], onToggle }: Props) => {
 						strokeWidth={0.5}
 						role="button"
 						tabIndex={0}
+						aria-label={getCountryName(code)}
 						className="cursor-pointer transition-colors duration-200 hover:opacity-80"
 						onClick={() => onToggle(code)}
 						onKeyDown={(e) => {
