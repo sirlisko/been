@@ -1,5 +1,5 @@
 import type { User } from "@supabase/supabase-js";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AuthModal from "./components/AuthModal";
 import CountryList from "./components/CountryList";
 import CountrySearch from "./components/CountrySearch";
@@ -32,6 +32,7 @@ const App = () => {
 	const [search, setSearch] = useState("");
 	const [showAuth, setShowAuth] = useState(false);
 	const [loading, setLoading] = useState(true);
+	const [syncError, setSyncError] = useState<string | null>(null);
 	const handlingSignIn = useRef(false);
 
 	const handleSignIn = async (signedInUser: User) => {
@@ -93,8 +94,10 @@ const App = () => {
 		if (user) {
 			try {
 				await saveCountries(user.id, updated);
+				setSyncError(null);
 			} catch {
 				setCountries(prev);
+				setSyncError("Failed to save — please try again.");
 			}
 		} else {
 			localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
@@ -110,13 +113,17 @@ const App = () => {
 			count > 0 ? `Been — ${count} countries (${percentage}%)` : "Been";
 	}, [count]);
 
-	if (loading) return null;
-
-	const searchResults = search
-		? filterCountries(ALL_COUNTRY_CODES, search)
-		: [];
+	const searchResults = useMemo(
+		() => (search ? filterCountries(ALL_COUNTRY_CODES, search) : []),
+		[search],
+	);
 	const highlighted = search ? searchResults : [];
 	const displayedCountries = search ? searchResults : countries;
+
+	if (loading)
+		return (
+			<div className="text-center mt-20 text-gray-400">Loading&hellip;</div>
+		);
 
 	return (
 		<div>
@@ -166,6 +173,10 @@ const App = () => {
 				selected={countries}
 				onToggle={toggleCountry}
 			/>
+
+			{syncError && (
+				<p className="text-center text-red-500 text-sm mt-2">{syncError}</p>
+			)}
 
 			<footer className="text-center mt-8 mb-4">
 				<p>
