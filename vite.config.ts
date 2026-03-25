@@ -7,7 +7,7 @@ import { defineConfig } from "vite";
 export default defineConfig({
 	plugins: [react()],
 	test: {
-		include: ["**/*.spec.ts(x)"],
+		include: ["**/*.spec.{ts,tsx}"],
 		globals: true,
 		environment: "jsdom",
 		setupFiles: ["./vitest.setup.ts"],
