@@ -118,7 +118,6 @@ const App = () => {
 		[search],
 	);
 	const highlighted = search ? searchResults : [];
-	const displayedCountries = search ? searchResults : countries;
 
 	if (loading)
 		return (
@@ -166,10 +165,16 @@ const App = () => {
 
 			<Stats count={count} />
 
-			<CountrySearch value={search} onChange={setSearch} />
+			<CountrySearch
+				value={search}
+				onChange={setSearch}
+				results={searchResults}
+				selected={countries}
+				onSelect={toggleCountry}
+			/>
 
 			<CountryList
-				countries={displayedCountries}
+				countries={countries}
 				selected={countries}
 				onToggle={toggleCountry}
 			/>
