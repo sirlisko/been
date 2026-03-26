@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import CountrySearch from "./CountrySearch";
 import type { CountryCode } from "../types";
+import CountrySearch from "./CountrySearch";
 
 const defaultProps = {
 	value: "",
