@@ -1,6 +1,6 @@
 # 🛫 BEEN 🛬
 
-> Keep track of where you have BEEN 🌍 🌎 🌏 — [been.netlify.com](https://been.netlify.com/)
+> Keep track of where you have BEEN 🌍 🌎 🌏 — [been.sirlisko.com](https://been.sirlisko.com/)
 
 ## Setup
 
@@ -10,6 +10,10 @@ Copy `.env.example` to `.env` and fill in your Supabase credentials:
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
+
+## Requirements
+
+- Node.js 24
 
 ## Build
 
