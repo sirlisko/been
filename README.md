@@ -1,35 +1,58 @@
 # 🛫 BEEN 🛬
 
-> [https://https://been.netlify.com/](https://https://been.netlify.com/) - Keep track of where you have BEEN 🌍 🌎 🌏.
+> Keep track of where you have BEEN 🌍 🌎 🌏 — [been.sirlisko.com](https://been.sirlisko.com/)
+
+## Setup
+
+Copy `.env.example` to `.env` and fill in your Supabase credentials:
+
+```
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+## Requirements
+
+- Node.js 24
 
 ## Build
 
 To install all the dependencies:
 
 ```bash
-  yarn
+  pnpm install
 ```
 
 To start the project locally:
 
 ```bash
-  yarn start
+  pnpm dev
 ```
 
-To build it and deploy to gh-pages:
+To build:
 
 ```bash
-  yarn deploy
+  pnpm build
+```
+
+To run tests:
+
+```bash
+  pnpm test
 ```
 
 ## Under the hood
 
-- powered by [`create-react-app`](https://github.com/facebook/create-react-app)
-- CSS in JS with [styled-components](https://www.styled-components.com/)
-- database and auth thanks to [firebase](https://firebase.google.com/)
-- sync of state / db using [re-base](https://github.com/tylermcginnis/re-base)
-- check the syntax of the JS, according to [Prettier](https://prettier.io/) and [StandardJS](http://standardjs.com/) (via [ESLint](http://eslint.org/))
+- [React](https://react.dev/) 19 + [TypeScript](https://www.typescriptlang.org/)
+- [Vite](https://vitejs.dev/) for bundling and dev server
+- [Tailwind CSS](https://tailwindcss.com/) for styling
+- [Supabase](https://supabase.com/) for database and auth
+- [Biome](https://biomejs.dev/) for linting and formatting
+- [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) for unit tests
+- Deployed on [Netlify](https://www.netlify.com/)
 
-## See it in action
+## Previous version (tag 0.1)
 
-![been](./public/been.png)
+A version with the old stack is available at git tag 0.1: https://github.com/sirlisko/been/tree/0.1
+
+Old stack: Create React App, Firestore, ESLint + Prettier, Styled Components, Jest.
