@@ -3,7 +3,8 @@ import type { CountryCode } from "../types";
 
 export const TOTAL_COUNTRIES = 195;
 
-export const ALL_COUNTRY_CODES: CountryCode[] = getCodes().sort() as CountryCode[];
+export const ALL_COUNTRY_CODES: CountryCode[] =
+	getCodes().sort() as CountryCode[];
 
 export function getCountryName(code: CountryCode): string {
 	return getName(code) ?? code;

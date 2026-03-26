@@ -9,8 +9,12 @@ const fr = "FR" as CountryCode;
 
 describe("CountryList", () => {
 	it("renders country names", () => {
-		render(<CountryList countries={[us, fr]} selected={[]} onToggle={vi.fn()} />);
-		expect(screen.getByText("United States of America (the)")).toBeInTheDocument();
+		render(
+			<CountryList countries={[us, fr]} selected={[]} onToggle={vi.fn()} />,
+		);
+		expect(
+			screen.getByText("United States of America (the)"),
+		).toBeInTheDocument();
 		expect(screen.getByText("France")).toBeInTheDocument();
 	});
 
@@ -24,13 +28,17 @@ describe("CountryList", () => {
 	it("calls onToggle with the country code when clicked", async () => {
 		const onToggle = vi.fn();
 		render(<CountryList countries={[us]} selected={[]} onToggle={onToggle} />);
-		await userEvent.click(screen.getByRole("button", { name: /united states of america/i }));
+		await userEvent.click(
+			screen.getByRole("button", { name: /united states of america/i }),
+		);
 		expect(onToggle).toHaveBeenCalledWith(us);
 	});
 
 	it("does not call onToggle for a different country", async () => {
 		const onToggle = vi.fn();
-		render(<CountryList countries={[us, fr]} selected={[]} onToggle={onToggle} />);
+		render(
+			<CountryList countries={[us, fr]} selected={[]} onToggle={onToggle} />,
+		);
 		await userEvent.click(screen.getByRole("button", { name: /france/i }));
 		expect(onToggle).toHaveBeenCalledWith(fr);
 		expect(onToggle).not.toHaveBeenCalledWith(us);

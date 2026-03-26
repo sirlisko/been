@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import CountrySearch from "./CountrySearch";
+import type { CountryCode } from "../types";
 
 const defaultProps = {
 	value: "",
@@ -37,7 +38,7 @@ describe("CountrySearch", () => {
 			<CountrySearch
 				{...defaultProps}
 				value="it"
-				results={["IT", "FR"]}
+				results={["IT", "FR"] as CountryCode[]}
 			/>,
 		);
 		await userEvent.click(screen.getByRole("textbox"));
@@ -50,7 +51,7 @@ describe("CountrySearch", () => {
 			<CountrySearch
 				{...defaultProps}
 				value="ital"
-				results={["IT"]}
+				results={["IT"] as CountryCode[]}
 				onSelect={onSelect}
 			/>,
 		);
@@ -64,8 +65,8 @@ describe("CountrySearch", () => {
 			<CountrySearch
 				{...defaultProps}
 				value="ital"
-				results={["IT"]}
-				selected={["IT"]}
+				results={["IT"] as CountryCode[]}
+				selected={["IT"] as CountryCode[]}
 			/>,
 		);
 		await userEvent.click(screen.getByRole("textbox"));

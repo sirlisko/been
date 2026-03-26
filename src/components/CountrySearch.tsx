@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { CountryCode } from "../types";
-import { getFlagUrl, getCountryName } from "../utils/countries";
+import { getCountryName, getFlagUrl } from "../utils/countries";
 
 interface Props {
 	value: string;
@@ -10,7 +10,13 @@ interface Props {
 	onSelect: (code: CountryCode) => void;
 }
 
-const CountrySearch = ({ value, onChange, results, selected, onSelect }: Props) => {
+const CountrySearch = ({
+	value,
+	onChange,
+	results,
+	selected,
+	onSelect,
+}: Props) => {
 	const [open, setOpen] = useState(false);
 	const selectedSet = new Set(selected);
 

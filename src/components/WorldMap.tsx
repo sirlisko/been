@@ -35,6 +35,7 @@ const WorldMap = ({ selected, highlighted = [], onToggle }: Props) => {
 						fill={getFill(code)}
 						stroke="#fff"
 						strokeWidth={0.5}
+						// biome-ignore lint/a11y/useSemanticElements: <explanation>
 						role="button"
 						tabIndex={0}
 						aria-label={getCountryName(code)}

@@ -10,7 +10,9 @@ import {
 
 describe("getCountryName", () => {
 	it("returns the country name for a known code", () => {
-		expect(getCountryName("US" as CountryCode)).toBe("United States of America (the)");
+		expect(getCountryName("US" as CountryCode)).toBe(
+			"United States of America (the)",
+		);
 	});
 
 	it("falls back to the code for an unknown code", () => {
