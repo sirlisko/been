@@ -36,35 +36,38 @@ export interface Collection {
 	title: string;
 	kind: string;
 	mark: string;
+	note?: string;
 	codes: CountryCode[];
 }
 
-// UN states only; each list follows the source noted beside it
+// UN states only; `note` names the source wherever the list isn't obvious
 export const COLLECTIONS: Collection[] = [
-	// Countries the river itself flows through
 	{
 		title: "Along the Amazon",
 		kind: "River",
 		mark: "AMAZON",
+		note: "Countries the river flows through.",
 		codes: codes("PE CO BR"),
 	},
 	{
 		title: "The Mekong",
 		kind: "River",
 		mark: "MEKONG",
+		note: "Countries the river flows through.",
 		codes: codes("CN MM LA TH KH VN"),
 	},
 	{
 		title: "Down the Danube",
 		kind: "River",
 		mark: "DANUBE",
+		note: "Countries the river flows through.",
 		codes: codes("DE AT SK HU HR RS RO BG MD UA"),
 	},
-	// Nile Basin Initiative member states (Eritrea is an observer)
 	{
 		title: "The Nile basin",
 		kind: "River",
 		mark: "NILE",
+		note: "Nile Basin Initiative members; Eritrea is only an observer.",
 		codes: codes("BI CD EG ET KE RW SS SD TZ UG"),
 	},
 	{
@@ -79,32 +82,32 @@ export const COLLECTIONS: Collection[] = [
 		mark: "HIMALAYA",
 		codes: codes("BT CN IN NP PK"),
 	},
-	// Alpine Convention
 	{
 		title: "The Alps",
 		kind: "Mountains",
 		mark: "ALPS",
+		note: "Members of the Alpine Convention.",
 		codes: codes("AT CH DE FR IT LI MC SI"),
 	},
-	// Includes the Maldives, where it crosses territorial waters
 	{
 		title: "Along the Equator",
 		kind: "Line on the map",
 		mark: "0°",
+		note: "Includes the Maldives, where the line crosses its waters.",
 		codes: codes("EC CO BR ST GA CG CD UG KE SO MV ID KI"),
 	},
-	// Spanish as an official language (excluding Puerto Rico, a territory)
 	{
 		title: "Hispanophone world",
 		kind: "Language",
 		mark: "HOLA",
+		note: "Spanish is an official language. Puerto Rico is a territory, so it doesn't count.",
 		codes: codes("AR BO CL CO CR CU DO EC SV GQ GT HN MX NI PA PY PE ES UY VE"),
 	},
-	// CPLP member states
 	{
 		title: "Lusophone world",
 		kind: "Language",
 		mark: "OLÁ",
+		note: "Members of the Community of Portuguese Language Countries.",
 		codes: codes("AO BR CV GW GQ MZ PT ST TL"),
 	},
 	{
@@ -119,25 +122,25 @@ export const COLLECTIONS: Collection[] = [
 		mark: "ARCTIC",
 		codes: codes("CA DK FI IS NO RU SE US"),
 	},
-	// USMCA
 	{
 		title: "North America",
 		kind: "Region",
 		mark: "N·AM",
+		note: "The USMCA countries.",
 		codes: codes("CA US MX"),
 	},
-	// The seven isthmus countries
 	{
 		title: "Central America",
 		kind: "Region",
 		mark: "C·AM",
+		note: "The seven countries on the isthmus.",
 		codes: codes("BZ GT SV HN NI CR PA"),
 	},
-	// Arab Maghreb Union
 	{
 		title: "The Maghreb",
 		kind: "Region",
 		mark: "MAGHREB",
+		note: "Members of the Arab Maghreb Union.",
 		codes: codes("DZ LY MR MA TN"),
 	},
 	{
@@ -158,11 +161,11 @@ export const COLLECTIONS: Collection[] = [
 		mark: "EAC",
 		codes: codes("BI CD KE RW SO SS TZ UG"),
 	},
-	// Including Timor-Leste, admitted October 2025
 	{
 		title: "ASEAN",
 		kind: "Region",
 		mark: "ASEAN",
+		note: "Includes Timor-Leste, admitted in October 2025.",
 		codes: codes("BN KH ID LA MY MM PH SG TH VN TL"),
 	},
 	{
@@ -177,18 +180,18 @@ export const COLLECTIONS: Collection[] = [
 		mark: "CAUCASUS",
 		codes: codes("AM AZ GE"),
 	},
-	// Gulf Cooperation Council
 	{
 		title: "Gulf states",
 		kind: "Region",
 		mark: "GULF",
+		note: "Members of the Gulf Cooperation Council.",
 		codes: codes("BH KW OM QA SA AE"),
 	},
-	// UN M49 Melanesia, UN states only
 	{
 		title: "Melanesia",
 		kind: "Region",
 		mark: "MELANESIA",
+		note: "The UN's Melanesia region, sovereign states only.",
 		codes: codes("FJ PG SB VU"),
 	},
 	{ title: "Down Under", kind: "Region", mark: "OZ·NZ", codes: codes("AU NZ") },

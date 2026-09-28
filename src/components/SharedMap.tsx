@@ -43,6 +43,10 @@ const SharedMap = ({ countries }: Props) => (
 			<CountryList countries={countries} />
 		</section>
 
+		<h2 className="m-0 font-display italic font-normal text-3xl md:text-4xl">
+			Collections
+		</h2>
+
 		<section
 			id="collections"
 			className="scroll-mt-6 page-frame px-4 md:px-8 pt-11 pb-6"

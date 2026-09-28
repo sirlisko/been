@@ -7,6 +7,7 @@
 - Mark visited countries on a world map; progress counts the 195 UN states, other places count as territories
 - Works without an account (saved in the browser); sign in with an email code to sync across devices
 - Share a read-only map of your countries via link
+- Collections: progress by continent plus themed sets (rivers, mountains, regions), shown on shared maps too
 
 ## Setup
 

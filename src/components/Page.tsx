@@ -40,7 +40,7 @@ const Page = ({ actions, children }: Props) => (
 
 		<footer className="flex justify-between gap-4 pt-4 border-t border-ink font-mono text-xs text-muted">
 			<span>
-				Made with care by{" "}
+				Made with ❤️ by{" "}
 				<a
 					href="https://sirlisko.com"
 					target="_blank"

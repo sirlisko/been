@@ -1,11 +1,18 @@
 import type { CountryCode } from "../types";
-import { COLLECTIONS, CONTINENTS, TIERS, progress } from "../utils/collections";
+import {
+	COLLECTIONS,
+	CONTINENTS,
+	type Collection,
+	TIERS,
+	progress,
+} from "../utils/collections";
+import { getCountryName } from "../utils/countries";
 
 const INKS = ["text-stamp-blue", "text-stamp-green", "text-stamp-red"];
 const ROTATIONS = ["-rotate-3", "rotate-2", "-rotate-2"];
 
-const cardClass =
-	"flex items-center gap-4 min-h-[116px] px-4 py-3.5 bg-page border";
+const toggle = "cursor-pointer list-none [&::-webkit-details-marker]:hidden";
+const cardClass = `flex items-center gap-4 min-h-[116px] px-4 py-3.5 ${toggle}`;
 
 const seal = (mark: string) => (
 	<span
@@ -27,6 +34,30 @@ const CardText = ({ c }: { c: Card }) => (
 		</span>
 		<h4 className="m-0 font-display font-semibold text-xl">{c.title}</h4>
 		<span className="text-[13px] leading-snug text-muted">{c.detail}</span>
+	</div>
+);
+
+const Members = ({
+	c,
+	visited,
+	className,
+}: {
+	c: Collection;
+	visited: Set<string>;
+	className: string;
+}) => (
+	<div className={`flex flex-col gap-2 text-[13px] ${className}`}>
+		{c.note && <p className="m-0 text-muted italic">{c.note}</p>}
+		<ul className="m-0 p-0 list-none flex flex-wrap gap-x-4 gap-y-1">
+			{c.codes.map((code) => (
+				<li
+					key={code}
+					className={visited.has(code) ? "text-ink" : "text-muted"}
+				>
+					{visited.has(code) ? "✓" : "○"} {getCountryName(code)}
+				</li>
+			))}
+		</ul>
 	</div>
 );
 
@@ -90,17 +121,22 @@ const Collections = ({ countries }: Props) => {
 					</h3>
 					<ul className="m-0 p-0 list-none grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
 						{complete.map((c, i) => (
-							<li key={c.title} className={`${cardClass} border-ink`}>
-								<div
-									className={`relative shrink-0 size-[88px] rounded-full flex flex-col items-center justify-center gap-0.5 ${INKS[i % INKS.length]} ${ROTATIONS[i % ROTATIONS.length]}`}
-								>
-									<span aria-hidden="true" className="stamp-frame ink" />
-									<span className="font-mono text-[8px] font-medium tracking-[0.15em]">
-										COMPLETE
-									</span>
-									{seal(c.mark)}
-								</div>
-								<CardText c={c} />
+							<li key={c.title} className="bg-page border border-ink">
+								<details>
+									<summary className={cardClass}>
+										<div
+											className={`relative shrink-0 size-[88px] rounded-full flex flex-col items-center justify-center gap-0.5 ${INKS[i % INKS.length]} ${ROTATIONS[i % ROTATIONS.length]}`}
+										>
+											<span aria-hidden="true" className="stamp-frame ink" />
+											<span className="font-mono text-[8px] font-medium tracking-[0.15em]">
+												COMPLETE
+											</span>
+											{seal(c.mark)}
+										</div>
+										<CardText c={c} />
+									</summary>
+									<Members c={c} visited={visited} className="px-4 pb-4" />
+								</details>
 							</li>
 						))}
 					</ul>
@@ -114,18 +150,23 @@ const Collections = ({ countries }: Props) => {
 					</h3>
 					<ul className="m-0 p-0 list-none grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
 						{inProgress.map((c) => (
-							<li key={c.title} className={`${cardClass} border-line`}>
-								<div className="relative shrink-0 size-[88px] rounded-full flex items-center justify-center text-[#8A8273] border border-[#C9BFAC] shadow-[inset_0_0_0_4px_#F8F4EC,inset_0_0_0_5px_#C9BFAC]">
-									<span
-										aria-hidden="true"
-										className="absolute inset-0 rounded-full [mask:radial-gradient(farthest-side,transparent_calc(100%-4px),#000_calc(100%-4px))]"
-										style={{
-											background: `conic-gradient(#B8432F ${(c.have / c.total) * 100}%, transparent 0)`,
-										}}
-									/>
-									{seal(c.mark)}
-								</div>
-								<CardText c={c} />
+							<li key={c.title} className="bg-page border border-line">
+								<details>
+									<summary className={cardClass}>
+										<div className="relative shrink-0 size-[88px] rounded-full flex items-center justify-center text-[#8A8273] border border-[#C9BFAC] shadow-[inset_0_0_0_4px_#F8F4EC,inset_0_0_0_5px_#C9BFAC]">
+											<span
+												aria-hidden="true"
+												className="absolute inset-0 rounded-full [mask:radial-gradient(farthest-side,transparent_calc(100%-4px),#000_calc(100%-4px))]"
+												style={{
+													background: `conic-gradient(#B8432F ${(c.have / c.total) * 100}%, transparent 0)`,
+												}}
+											/>
+											{seal(c.mark)}
+										</div>
+										<CardText c={c} />
+									</summary>
+									<Members c={c} visited={visited} className="px-4 pb-4" />
+								</details>
 							</li>
 						))}
 					</ul>
@@ -147,14 +188,18 @@ const Collections = ({ countries }: Props) => {
 					</summary>
 					<ul className="m-0 p-0 pb-5 list-none grid sm:grid-cols-2 lg:grid-cols-4 gap-x-6">
 						{notStarted.map((c) => (
-							<li
-								key={c.title}
-								className="flex justify-between items-baseline gap-2 py-2.5 border-b border-line"
-							>
-								<span className="font-display text-[17px]">{c.title}</span>
-								<span className="font-mono text-xs text-muted">
-									0/{c.total}
-								</span>
+							<li key={c.title} className="border-b border-line">
+								<details>
+									<summary
+										className={`flex justify-between items-baseline gap-2 py-2.5 ${toggle}`}
+									>
+										<span className="font-display text-[17px]">{c.title}</span>
+										<span className="font-mono text-xs text-muted">
+											0/{c.total}
+										</span>
+									</summary>
+									<Members c={c} visited={visited} className="pb-2.5" />
+								</details>
 							</li>
 						))}
 					</ul>
