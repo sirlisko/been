@@ -4,13 +4,12 @@ export default {
 	theme: {
 		extend: {
 			colors: {
-				accent: "#FF6B6B",
-				alternate: "#4ECDC4",
-				"gray-light": "#E0E0E0",
-				been: "#c2185b",
+				primary: "#EA580B",
+				secondary: "#F59E0B",
+				"warm-bg": "#FFEDD5",
 			},
 			fontFamily: {
-				"luckiest-guy": ['"Luckiest Guy"', "cursive"],
+				display: ['"Limelight"', "cursive"],
 			},
 		},
 	},

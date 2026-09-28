@@ -1,169 +1,205 @@
 import type { User } from "@supabase/supabase-js";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AuthModal from "./components/AuthModal";
 import CountryList from "./components/CountryList";
 import CountrySearch from "./components/CountrySearch";
 import Stats from "./components/Stats";
 import WorldMap from "./components/WorldMap";
-import { loadCountries, saveCountries } from "./lib/countriesDB";
+import { addCountries, loadCountries, removeCountry } from "./lib/countriesDB";
 import { supabase } from "./lib/supabase";
 import type { CountryCode } from "./types";
 import {
 	ALL_COUNTRY_CODES,
-	TOTAL_COUNTRIES,
+	countStates,
 	filterCountries,
+	getCountryName,
 } from "./utils/countries";
 
 const LOCAL_STORAGE_KEY = "visitedCountries";
+
+const linkButtonClass =
+	"text-xs font-sans font-bold text-primary uppercase tracking-widest mt-2 border-b-2 border-primary";
 
 function readLocalCountries(): CountryCode[] {
 	try {
 		const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
 		return raw ? JSON.parse(raw) : [];
 	} catch {
-		localStorage.removeItem(LOCAL_STORAGE_KEY);
 		return [];
 	}
 }
 
+function writeLocalCountries(codes: CountryCode[]) {
+	try {
+		if (codes.length > 0) {
+			localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(codes));
+		} else {
+			localStorage.removeItem(LOCAL_STORAGE_KEY);
+		}
+	} catch (e) {
+		console.warn("Could not save to localStorage:", e);
+	}
+}
+
+type Notice = { text: string; error?: boolean };
+
 const App = () => {
 	const [user, setUser] = useState<User | null>(null);
-	const [countries, setCountries] = useState<CountryCode[]>([]);
+	const [countries, setCountries] = useState<CountryCode[]>(readLocalCountries);
+	// Editing is blocked unless the account's list loaded: saving on top of a
+	// failed load would make the UI disagree with what's stored.
+	const [remote, setRemote] = useState<"loading" | "ok" | "failed">("ok");
 	const [search, setSearch] = useState("");
 	const [showAuth, setShowAuth] = useState(false);
-	const [loading, setLoading] = useState(true);
-	const [syncError, setSyncError] = useState<string | null>(null);
-	const handlingSignIn = useRef(false);
+	const [notice, setNotice] = useState<Notice | null>(null);
 
-	const handleSignIn = async (signedInUser: User) => {
-		handlingSignIn.current = true;
+	const syncUser = async (signedIn: User) => {
+		setUser(signedIn);
+		setShowAuth(false);
+		setRemote("loading");
 		try {
 			const local = readLocalCountries();
-			const dbCountries = await loadCountries(signedInUser.id);
-			const merged = [...new Set([...dbCountries, ...local])];
 			if (local.length > 0) {
-				await saveCountries(signedInUser.id, merged);
+				await addCountries(signedIn.id, local);
+				writeLocalCountries([]);
 			}
-			localStorage.removeItem(LOCAL_STORAGE_KEY);
-			setCountries(merged);
+			setCountries(await loadCountries(signedIn.id));
+			setRemote("ok");
 		} catch (e) {
 			console.error("Sync failed:", e);
-			setCountries(readLocalCountries());
+			setRemote("failed");
 		}
-		setUser(signedInUser);
-		setShowAuth(false);
-		handlingSignIn.current = false;
 	};
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: bootstrap effect
+	// biome-ignore lint/correctness/useExhaustiveDependencies: syncUser only touches state setters
 	useEffect(() => {
-		supabase.auth.getSession().then(({ data }) => {
-			const sessionUser = data.session?.user ?? null;
-			if (sessionUser) {
-				loadCountries(sessionUser.id).then(setCountries).catch(console.error);
-			} else {
-				setCountries(readLocalCountries());
-			}
-			setUser(sessionUser);
-			setLoading(false);
-		});
-
-		const { data: listener } = supabase.auth.onAuthStateChange(
-			(event, session) => {
+		if (!supabase) return;
+		const { data } = supabase.auth.onAuthStateChange((event, session) => {
+			// Deferred: awaiting supabase calls inside this callback can deadlock the auth lock.
+			setTimeout(() => {
 				if (event === "SIGNED_OUT") {
 					setUser(null);
+					setRemote("ok");
 					setCountries(readLocalCountries());
+					setNotice({
+						text: "Signed out. Your countries are saved to your account.",
+					});
+				} else if (
+					(event === "INITIAL_SESSION" || event === "SIGNED_IN") &&
+					session
+				) {
+					syncUser(session.user);
 				}
-				if (event === "SIGNED_IN" && session?.user && !handlingSignIn.current) {
-					handleSignIn(session.user);
-				}
-			},
-		);
-		return () => listener.subscription.unsubscribe();
+			}, 0);
+		});
+		return () => data.subscription.unsubscribe();
 	}, []);
 
 	const toggleCountry = async (code: CountryCode) => {
-		const prev = countries;
-		const isSelected = countries.includes(code);
-		const updated = isSelected
-			? countries.filter((c) => c !== code)
-			: [...countries, code];
+		if (user && remote !== "ok") return;
+		const adding = !countries.includes(code);
+		const next = adding
+			? [...countries, code]
+			: countries.filter((c) => c !== code);
+		setCountries(next);
 
-		setCountries(updated);
-
-		if (user) {
-			try {
-				await saveCountries(user.id, updated);
-				setSyncError(null);
-			} catch {
-				setCountries(prev);
-				setSyncError("Failed to save — please try again.");
-			}
-		} else {
-			localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+		if (!user) {
+			writeLocalCountries(next);
+			return;
+		}
+		try {
+			await (adding
+				? addCountries(user.id, [code])
+				: removeCountry(user.id, code));
+			setNotice(null);
+		} catch (e) {
+			console.error("Save failed:", e);
+			setCountries((current) => {
+				const without = current.filter((c) => c !== code);
+				return adding ? without : [...without, code];
+			});
+			setNotice({
+				text: `Couldn't save ${getCountryName(code)}, please try again.`,
+				error: true,
+			});
 		}
 	};
 
-	const count = countries.length;
-	const percentage = ((count / TOTAL_COUNTRIES) * 100).toFixed(1);
+	const { count, percentage } = countStates(countries);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: intentional
 	useEffect(() => {
 		document.title =
 			count > 0 ? `Been — ${count} countries (${percentage}%)` : "Been";
-	}, [count]);
+	}, [count, percentage]);
 
 	const searchResults = useMemo(
 		() => (search ? filterCountries(ALL_COUNTRY_CODES, search) : []),
 		[search],
 	);
-	const highlighted = search ? searchResults : [];
-
-	if (loading)
-		return (
-			<div className="text-center mt-20 text-gray-400">Loading&hellip;</div>
-		);
 
 	return (
 		<div>
-			<header className="font-luckiest-guy text-center my-12">
-				<h1 className="text-5xl">Been.</h1>
-				<p className="font-sans font-normal text-gray-400 mt-1">
+			<header className="font-display text-center my-12">
+				<h1 className="text-7xl text-primary">Been.</h1>
+				<p className="font-sans font-normal text-gray-600 mt-2 tracking-widest uppercase text-xs">
 					where have you been?
 				</p>
-				{user ? (
-					<button
-						type="button"
-						onClick={() => supabase.auth.signOut()}
-						className="text-xs font-sans font-normal text-gray-400 underline mt-1"
-					>
-						sign out
-					</button>
-				) : (
-					<button
-						type="button"
-						onClick={() => setShowAuth(true)}
-						className="text-xs font-sans font-normal text-gray-400 underline mt-1"
-					>
-						sign in to sync
-					</button>
-				)}
+				{supabase &&
+					(user ? (
+						<button
+							type="button"
+							onClick={() => supabase?.auth.signOut()}
+							className={linkButtonClass}
+						>
+							sign out
+						</button>
+					) : (
+						<button
+							type="button"
+							onClick={() => setShowAuth(true)}
+							className={linkButtonClass}
+						>
+							sign in to sync
+						</button>
+					))}
 			</header>
 
-			{showAuth && (
-				<AuthModal
-					onClose={() => setShowAuth(false)}
-					onSuccess={handleSignIn}
-				/>
-			)}
+			{showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
 
 			<WorldMap
 				selected={countries}
-				highlighted={highlighted}
+				highlighted={searchResults}
 				onToggle={toggleCountry}
 			/>
 
-			<Stats count={count} />
+			<Stats countries={countries} />
+
+			<div className="text-center text-sm px-4" aria-live="polite">
+				{user && remote === "loading" && (
+					<p className="text-gray-600">Loading your countries&hellip;</p>
+				)}
+				{user && remote === "failed" && (
+					<p role="alert" className="text-red-700 font-bold">
+						Couldn't load your countries.{" "}
+						<button
+							type="button"
+							onClick={() => syncUser(user)}
+							className="underline"
+						>
+							Retry
+						</button>
+					</p>
+				)}
+				{notice && (
+					<p
+						className={
+							notice.error ? "text-red-700 font-bold" : "text-gray-600"
+						}
+					>
+						{notice.text}
+					</p>
+				)}
+			</div>
 
 			<CountrySearch
 				value={search}
@@ -173,17 +209,9 @@ const App = () => {
 				onSelect={toggleCountry}
 			/>
 
-			<CountryList
-				countries={countries}
-				selected={countries}
-				onToggle={toggleCountry}
-			/>
+			<CountryList countries={countries} onToggle={toggleCountry} />
 
-			{syncError && (
-				<p className="text-center text-red-500 text-sm mt-2">{syncError}</p>
-			)}
-
-			<footer className="text-center mt-8 mb-4">
+			<footer className="text-center mt-12 mb-6 text-sm text-gray-600">
 				<p>
 					Made with ♥ by{" "}
 					<a

@@ -3,6 +3,7 @@ import type { CountryCode } from "../types";
 import {
 	ALL_COUNTRY_CODES,
 	TOTAL_COUNTRIES,
+	UN_STATES,
 	filterCountries,
 	getCountryName,
 	getFlagUrl,
@@ -71,8 +72,9 @@ describe("ALL_COUNTRY_CODES", () => {
 	});
 });
 
-describe("TOTAL_COUNTRIES", () => {
-	it("is 195", () => {
+describe("UN_STATES", () => {
+	it("has 195 states, all known country codes", () => {
 		expect(TOTAL_COUNTRIES).toBe(195);
+		for (const code of UN_STATES) expect(ALL_COUNTRY_CODES).toContain(code);
 	});
 });

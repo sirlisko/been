@@ -23,27 +23,20 @@ const WorldMap = ({ selected, highlighted = [], onToggle }: Props) => {
 			viewBox="0 0 2000 1001"
 			className="w-full h-auto"
 			role="img"
-			aria-label="World map"
+			aria-label="World map of visited countries"
 		>
-			<title>World map</title>
 			{countriesShapes.map(({ id, shape }) => {
 				const code = id as CountryCode;
 				return (
+					// biome-ignore lint/a11y/useKeyWithClickEvents: keyboard users toggle via search; ~200 focusable paths would trap tab navigation
 					<path
 						key={id}
 						d={shape}
 						fill={getFill(code)}
 						stroke="#fff"
 						strokeWidth={0.5}
-						// biome-ignore lint/a11y/useSemanticElements: <explanation>
-						role="button"
-						tabIndex={0}
-						aria-label={getCountryName(code)}
 						className="cursor-pointer transition-colors duration-200 hover:opacity-80"
 						onClick={() => onToggle(code)}
-						onKeyDown={(e) => {
-							if (e.key === "Enter" || e.key === " ") onToggle(code);
-						}}
 					>
 						<title>{getCountryName(code)}</title>
 					</path>

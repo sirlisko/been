@@ -8,39 +8,25 @@ const us = "US" as CountryCode;
 const fr = "FR" as CountryCode;
 
 describe("CountryList", () => {
-	it("renders country names", () => {
-		render(
-			<CountryList countries={[us, fr]} selected={[]} onToggle={vi.fn()} />,
-		);
-		expect(
-			screen.getByText("United States of America (the)"),
-		).toBeInTheDocument();
-		expect(screen.getByText("France")).toBeInTheDocument();
+	it("renders country names sorted alphabetically", () => {
+		render(<CountryList countries={[us, fr]} onToggle={vi.fn()} />);
+		expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual([
+			"France",
+			"United States of America (the)",
+		]);
 	});
 
 	it("renders nothing when the list is empty", () => {
 		const { container } = render(
-			<CountryList countries={[]} selected={[]} onToggle={vi.fn()} />,
+			<CountryList countries={[]} onToggle={vi.fn()} />,
 		);
 		expect(container.querySelectorAll("button")).toHaveLength(0);
 	});
 
-	it("calls onToggle with the country code when clicked", async () => {
+	it("calls onToggle with the clicked country", async () => {
 		const onToggle = vi.fn();
-		render(<CountryList countries={[us]} selected={[]} onToggle={onToggle} />);
-		await userEvent.click(
-			screen.getByRole("button", { name: /united states of america/i }),
-		);
-		expect(onToggle).toHaveBeenCalledWith(us);
-	});
-
-	it("does not call onToggle for a different country", async () => {
-		const onToggle = vi.fn();
-		render(
-			<CountryList countries={[us, fr]} selected={[]} onToggle={onToggle} />,
-		);
+		render(<CountryList countries={[us, fr]} onToggle={onToggle} />);
 		await userEvent.click(screen.getByRole("button", { name: /france/i }));
-		expect(onToggle).toHaveBeenCalledWith(fr);
-		expect(onToggle).not.toHaveBeenCalledWith(us);
+		expect(onToggle).toHaveBeenCalledExactlyOnceWith(fr);
 	});
 });

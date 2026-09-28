@@ -16,24 +16,19 @@ describe("CountrySearch", () => {
 	it("renders the search input", () => {
 		render(<CountrySearch {...defaultProps} />);
 		expect(
-			screen.getByPlaceholderText("Search countries..."),
+			screen.getByRole("combobox", { name: "Search countries" }),
 		).toBeInTheDocument();
-	});
-
-	it("shows the current value", () => {
-		render(<CountrySearch {...defaultProps} value="france" />);
-		expect(screen.getByDisplayValue("france")).toBeInTheDocument();
 	});
 
 	it("calls onChange with each typed character", async () => {
 		const onChange = vi.fn();
 		render(<CountrySearch {...defaultProps} onChange={onChange} />);
-		await userEvent.type(screen.getByRole("textbox"), "it");
+		await userEvent.type(screen.getByRole("combobox"), "it");
 		expect(onChange).toHaveBeenCalledWith("i");
 		expect(onChange).toHaveBeenCalledWith("t");
 	});
 
-	it("shows dropdown results when focused and results are provided", async () => {
+	it("shows results when focused", async () => {
 		render(
 			<CountrySearch
 				{...defaultProps}
@@ -41,26 +36,44 @@ describe("CountrySearch", () => {
 				results={["IT", "FR"] as CountryCode[]}
 			/>,
 		);
-		await userEvent.click(screen.getByRole("textbox"));
-		expect(screen.getByRole("list")).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("combobox"));
+		expect(screen.getAllByRole("option")).toHaveLength(2);
 	});
 
-	it("calls onSelect when a result is clicked", async () => {
+	it("selects a clicked result and clears the query", async () => {
 		const onSelect = vi.fn();
+		const onChange = vi.fn();
 		render(
 			<CountrySearch
 				{...defaultProps}
 				value="ital"
 				results={["IT"] as CountryCode[]}
 				onSelect={onSelect}
+				onChange={onChange}
 			/>,
 		);
-		await userEvent.click(screen.getByRole("textbox"));
-		await userEvent.click(screen.getByRole("button", { name: /italy/i }));
+		await userEvent.click(screen.getByRole("combobox"));
+		await userEvent.click(screen.getByRole("option", { name: /italy/i }));
 		expect(onSelect).toHaveBeenCalledWith("IT");
+		expect(onChange).toHaveBeenCalledWith("");
 	});
 
-	it("marks already-selected countries with a checkmark", async () => {
+	it("selects with arrow keys and Enter", async () => {
+		const onSelect = vi.fn();
+		render(
+			<CountrySearch
+				{...defaultProps}
+				value="a"
+				results={["IT", "FR"] as CountryCode[]}
+				onSelect={onSelect}
+			/>,
+		);
+		await userEvent.click(screen.getByRole("combobox"));
+		await userEvent.keyboard("{ArrowDown}{Enter}");
+		expect(onSelect).toHaveBeenCalledWith("FR");
+	});
+
+	it("marks already-selected countries", async () => {
 		render(
 			<CountrySearch
 				{...defaultProps}
@@ -69,7 +82,7 @@ describe("CountrySearch", () => {
 				selected={["IT"] as CountryCode[]}
 			/>,
 		);
-		await userEvent.click(screen.getByRole("textbox"));
-		expect(screen.getByText("✓")).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("combobox"));
+		expect(screen.getByText("visited")).toBeInTheDocument();
 	});
 });

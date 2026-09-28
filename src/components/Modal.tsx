@@ -1,39 +1,26 @@
-import { type ReactElement, useEffect } from "react";
-import { createPortal } from "react-dom";
+import { type ReactElement, useEffect, useRef } from "react";
 
 interface Props {
-	isModalOpen?: boolean;
 	onClose: () => void;
 	children: ReactElement;
 }
 
-const Modal = ({ isModalOpen, onClose, children }: Props) => {
+const Modal = ({ onClose, children }: Props) => {
+	const dialog = useRef<HTMLDialogElement>(null);
+
 	useEffect(() => {
-		if (!isModalOpen) return;
-		const handleKey = (e: KeyboardEvent) => {
-			if (e.key === "Escape") onClose();
-		};
-		document.addEventListener("keydown", handleKey);
-		document.body.style.overflow = "hidden";
-		return () => {
-			document.removeEventListener("keydown", handleKey);
-			document.body.style.overflow = "";
-		};
-	}, [isModalOpen, onClose]);
+		dialog.current?.showModal();
+	}, []);
 
-	if (!isModalOpen) return null;
-
-	return createPortal(
-		// biome-ignore lint/a11y/useKeyWithClickEvents: backdrop click handled by Escape key above
-		<div
-			className="fixed inset-0 bg-black/70 z-10 flex items-center justify-center"
-			onClick={onClose}
+	return (
+		// biome-ignore lint/a11y/useKeyWithClickEvents: native <dialog> already closes on Escape
+		<dialog
+			ref={dialog}
+			onClose={onClose}
+			onClick={(e) => e.target === dialog.current && onClose()}
+			className="p-0 w-[90%] max-w-[700px] max-h-[95vh] bg-white border-4 border-primary backdrop:bg-black/70"
 		>
-			{/* biome-ignore lint/a11y/useKeyWithClickEvents: inner click just stops propagation */}
-			<div
-				className="relative w-[90%] p-10 bg-white rounded-md shadow-2xl max-w-[700px] max-h-[95vh] overflow-y-auto"
-				onClick={(e) => e.stopPropagation()}
-			>
+			<div className="relative p-10">
 				<button
 					type="button"
 					onClick={onClose}
@@ -44,8 +31,7 @@ const Modal = ({ isModalOpen, onClose, children }: Props) => {
 				</button>
 				{children}
 			</div>
-		</div>,
-		document.body,
+		</dialog>
 	);
 };
 
