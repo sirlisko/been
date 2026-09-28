@@ -3,13 +3,19 @@
 	"name": "Been - Where have you been?",
 	"icons": [
 		{
+			"src": "icon.svg",
+			"sizes": "any",
+			"type": "image/svg+xml",
+			"purpose": "any maskable"
+		},
+		{
 			"src": "favicon.ico",
 			"sizes": "64x64 32x32 24x24 16x16",
 			"type": "image/x-icon"
 		}
 	],
-	"start_url": ".",
+	"start_url": "/",
 	"display": "standalone",
-	"theme_color": "#c2185b",
-	"background_color": "#ffffff"
+	"theme_color": "#EA580B",
+	"background_color": "#FFEDD5"
 }
