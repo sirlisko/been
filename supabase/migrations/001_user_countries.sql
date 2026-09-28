@@ -1,5 +1,3 @@
--- One row per visited country, so each toggle is an insert/delete instead of
--- overwriting the whole list (fixes out-of-order saves and multi-device clobbering).
 create table user_countries (
   user_id uuid not null references auth.users(id) on delete cascade,
   code text not null check (code ~ '^[A-Z]{2}$'),
@@ -20,11 +18,3 @@ create policy "Users can insert own countries"
 create policy "Users can delete own countries"
   on user_countries for delete
   using (auth.uid() = user_id);
-
-insert into user_countries (user_id, code)
-select user_id, jsonb_array_elements_text(countries)
-from visited_countries
-on conflict do nothing;
-
--- visited_countries is kept so the previous deploy keeps working during rollout.
--- Drop it in a follow-up migration once this version is live.
