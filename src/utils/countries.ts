@@ -13,6 +13,8 @@ export const TOTAL_COUNTRIES = UN_STATES.size;
 export const ALL_COUNTRY_CODES: CountryCode[] =
 	getCodes().sort() as CountryCode[];
 
+const KNOWN_CODES = new Set<string>(ALL_COUNTRY_CODES);
+
 export function getCountryName(code: CountryCode): string {
 	return getName(code) ?? code;
 }
@@ -46,4 +48,17 @@ export function countStates(codes: CountryCode[]) {
 		territories: codes.length - count,
 		percentage: ((count / TOTAL_COUNTRIES) * 100).toFixed(1),
 	};
+}
+
+export function toShareParam(codes: CountryCode[]): string {
+	return [...codes].sort().join(".");
+}
+
+export function parseShareParam(param: string | null): CountryCode[] | null {
+	if (param === null) return null;
+	const codes = param
+		.toUpperCase()
+		.split(".")
+		.filter((code) => KNOWN_CODES.has(code));
+	return [...new Set(codes)] as CountryCode[];
 }

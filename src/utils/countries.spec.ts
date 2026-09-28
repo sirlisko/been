@@ -7,6 +7,8 @@ import {
 	filterCountries,
 	getCountryName,
 	getFlagUrl,
+	parseShareParam,
+	toShareParam,
 } from "./countries";
 
 describe("getCountryName", () => {
@@ -76,5 +78,20 @@ describe("UN_STATES", () => {
 	it("has 195 states, all known country codes", () => {
 		expect(TOTAL_COUNTRIES).toBe(195);
 		for (const code of UN_STATES) expect(ALL_COUNTRY_CODES).toContain(code);
+	});
+});
+
+describe("share param", () => {
+	it("round-trips a list of codes", () => {
+		const codes = ["IT", "FR"] as CountryCode[];
+		expect(parseShareParam(toShareParam(codes))).toEqual(["FR", "IT"]);
+	});
+
+	it("drops unknown codes and duplicates", () => {
+		expect(parseShareParam("it.xx.IT.<script>")).toEqual(["IT"]);
+	});
+
+	it("returns null when there's no param", () => {
+		expect(parseShareParam(null)).toBeNull();
 	});
 });

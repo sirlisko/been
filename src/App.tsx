@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import AuthModal from "./components/AuthModal";
 import CountryList from "./components/CountryList";
 import CountrySearch from "./components/CountrySearch";
+import Page, { linkButtonClass } from "./components/Page";
 import Stats from "./components/Stats";
 import WorldMap from "./components/WorldMap";
 import { addCountries, loadCountries, removeCountry } from "./lib/countriesDB";
@@ -13,12 +14,10 @@ import {
 	countStates,
 	filterCountries,
 	getCountryName,
+	toShareParam,
 } from "./utils/countries";
 
 const LOCAL_STORAGE_KEY = "visitedCountries";
-
-const linkButtonClass =
-	"text-xs font-sans font-bold text-primary uppercase tracking-widest mt-2 border-b-2 border-primary";
 
 function readLocalCountries(): CountryCode[] {
 	try {
@@ -125,6 +124,20 @@ const App = () => {
 		}
 	};
 
+	const share = async () => {
+		const url = `${location.origin}/?visited=${toShareParam(countries)}`;
+		if (navigator.share) {
+			await navigator.share({ title: "Where I've been", url }).catch(() => {});
+			return;
+		}
+		try {
+			await navigator.clipboard.writeText(url);
+			setNotice({ text: "Link copied to clipboard." });
+		} catch {
+			setNotice({ text: `Share this link: ${url}` });
+		}
+	};
+
 	const { count, percentage } = countStates(countries);
 
 	useEffect(() => {
@@ -138,32 +151,28 @@ const App = () => {
 	);
 
 	return (
-		<div>
-			<header className="font-display text-center my-12">
-				<h1 className="text-7xl text-primary">Been.</h1>
-				<p className="font-sans font-normal text-gray-600 mt-2 tracking-widest uppercase text-xs">
-					where have you been?
-				</p>
-				{supabase &&
-					(user ? (
-						<button
-							type="button"
-							onClick={() => supabase?.auth.signOut()}
-							className={linkButtonClass}
-						>
-							sign out
-						</button>
-					) : (
-						<button
-							type="button"
-							onClick={() => setShowAuth(true)}
-							className={linkButtonClass}
-						>
-							sign in to sync
-						</button>
-					))}
-			</header>
-
+		<Page
+			action={
+				supabase &&
+				(user ? (
+					<button
+						type="button"
+						onClick={() => supabase?.auth.signOut()}
+						className={linkButtonClass}
+					>
+						sign out
+					</button>
+				) : (
+					<button
+						type="button"
+						onClick={() => setShowAuth(true)}
+						className={linkButtonClass}
+					>
+						sign in to sync
+					</button>
+				))
+			}
+		>
 			{showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
 
 			<WorldMap
@@ -192,12 +201,19 @@ const App = () => {
 				)}
 				{notice && (
 					<p
-						className={
-							notice.error ? "text-red-700 font-bold" : "text-gray-600"
-						}
+						className={`break-all ${notice.error ? "text-red-700 font-bold" : "text-gray-600"}`}
 					>
 						{notice.text}
 					</p>
+				)}
+				{countries.length > 0 && (
+					<button
+						type="button"
+						onClick={share}
+						className={`${linkButtonClass} mt-4`}
+					>
+						share my map
+					</button>
 				)}
 			</div>
 
@@ -210,21 +226,7 @@ const App = () => {
 			/>
 
 			<CountryList countries={countries} onToggle={toggleCountry} />
-
-			<footer className="text-center mt-12 mb-6 text-sm text-gray-600">
-				<p>
-					Made with ♥ by{" "}
-					<a
-						href="https://sirlisko.com"
-						target="_blank"
-						rel="noopener noreferrer"
-						className="text-current font-bold"
-					>
-						Luca Lischetti (@sirLisko)
-					</a>
-				</p>
-			</footer>
-		</div>
+		</Page>
 	);
 };
 

@@ -29,4 +29,9 @@ describe("CountryList", () => {
 		await userEvent.click(screen.getByRole("button", { name: /france/i }));
 		expect(onToggle).toHaveBeenCalledExactlyOnceWith(fr);
 	});
+
+	it("is read-only without onToggle", () => {
+		render(<CountryList countries={[us]} />);
+		expect(screen.getByRole("button")).toBeDisabled();
+	});
 });

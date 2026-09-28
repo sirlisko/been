@@ -6,7 +6,7 @@ import { getCountryName } from "../utils/countries";
 interface Props {
 	selected: CountryCode[];
 	highlighted?: CountryCode[];
-	onToggle: (code: CountryCode) => void;
+	onToggle?: (code: CountryCode) => void;
 }
 
 const ZOOM_LEVELS = [1, 2, 4];
@@ -57,8 +57,12 @@ const WorldMap = ({ selected, highlighted = [], onToggle }: Props) => {
 								stroke="#FFEDD5"
 								strokeWidth={0.5}
 								vectorEffect="non-scaling-stroke"
-								className="cursor-pointer transition-colors duration-200 hover:opacity-80"
-								onClick={() => onToggle(code)}
+								className={
+									onToggle
+										? "cursor-pointer transition-colors duration-200 hover:opacity-80"
+										: undefined
+								}
+								onClick={onToggle && (() => onToggle(code))}
 							>
 								<title>{getCountryName(code)}</title>
 							</path>

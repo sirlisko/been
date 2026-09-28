@@ -3,7 +3,7 @@ import { getCountryName, getFlagUrl, sortByName } from "../utils/countries";
 
 interface Props {
 	countries: CountryCode[];
-	onToggle: (code: CountryCode) => void;
+	onToggle?: (code: CountryCode) => void;
 }
 
 const CountryList = ({ countries, onToggle }: Props) => (
@@ -12,9 +12,10 @@ const CountryList = ({ countries, onToggle }: Props) => (
 			<li key={code}>
 				<button
 					type="button"
-					onClick={() => onToggle(code)}
-					title={`Remove ${getCountryName(code)}`}
-					className="flex items-center gap-2 p-3 w-full border-4 border-primary bg-warm-bg transition-colors duration-150 hover:bg-white"
+					onClick={() => onToggle?.(code)}
+					disabled={!onToggle}
+					title={onToggle ? `Remove ${getCountryName(code)}` : undefined}
+					className="flex items-center gap-2 p-3 w-full border-4 border-primary bg-warm-bg transition-colors duration-150 enabled:hover:bg-white"
 				>
 					<img
 						src={getFlagUrl(code)}
