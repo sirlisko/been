@@ -37,7 +37,7 @@ const Page = ({ actions, children }: Props) => (
 					rel="noopener noreferrer"
 					className="text-ink underline underline-offset-2"
 				>
-					Luca Lischetti
+					sirlisko
 				</a>
 			</span>
 			<span className="hidden sm:inline">been.sirlisko.com</span>
