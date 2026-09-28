@@ -8,6 +8,7 @@ const { authCallback, db } = vi.hoisted(() => ({
 		loadCountries: vi.fn(),
 		addCountries: vi.fn(),
 		removeCountry: vi.fn(),
+		loadProfile: vi.fn(),
 	},
 }));
 
@@ -42,6 +43,7 @@ const signedOut = async () => {
 
 beforeEach(() => {
 	vi.clearAllMocks();
+	db.loadProfile.mockResolvedValue(null);
 	localStorage.clear();
 });
 
@@ -118,7 +120,7 @@ it("nudges anonymous users with many stamps to sign in", async () => {
 });
 
 it("links back to the last shared map until forgotten", async () => {
-	localStorage.setItem("lastSharedMap", "?visited=IT.FR&name=Luca");
+	localStorage.setItem("lastSharedMap", "/?visited=IT.FR&name=Luca");
 	render(<App />);
 	expect(
 		screen.getByRole("link", { name: "Compare with the map you were sent" }),
@@ -144,4 +146,67 @@ it("caches the account's countries once loaded", async () => {
 	render(<App />);
 	await signIn();
 	expect(localStorage.getItem("accountCountries")).toBe('["JP"]');
+});
+
+it("undoes the last stamp from the toast", async () => {
+	render(<App />);
+	await signedOut();
+	await userEvent.type(screen.getByRole("combobox"), "italy{Enter}");
+	expect(screen.getByText(/Stamped Italy/)).toBeInTheDocument();
+	await userEvent.click(screen.getByRole("button", { name: "Undo" }));
+	expect(localStorage.getItem("visitedCountries")).toBeNull();
+	expect(screen.queryByText(/Stamped Italy/)).toBeNull();
+});
+
+it("saves a quick add then remove in order", async () => {
+	db.loadCountries.mockResolvedValue([]);
+	let finishAdd = () => {};
+	db.addCountries.mockReturnValue(
+		new Promise<void>((resolve) => {
+			finishAdd = resolve;
+		}),
+	);
+	db.removeCountry.mockResolvedValue(undefined);
+	render(<App />);
+	await signIn();
+	await userEvent.type(screen.getByRole("combobox"), "italy{Enter}");
+	await userEvent.click(screen.getByRole("button", { name: "Remove Italy" }));
+	expect(db.removeCountry).not.toHaveBeenCalled();
+	await act(async () => finishAdd());
+	expect(db.removeCountry).toHaveBeenCalledWith("user-1", "IT");
+});
+
+it("shares /@username when the profile is public", async () => {
+	const user = userEvent.setup();
+	db.loadCountries.mockResolvedValue(["IT", "FR"]);
+	db.loadProfile.mockResolvedValue({ username: "ada", isPublic: true });
+	render(<App />);
+	await signIn();
+	await user.click(screen.getByRole("button", { name: "Share map" }));
+	expect(await navigator.clipboard.readText()).toBe(`${location.origin}/@ada`);
+});
+
+it("shares a snapshot link when the profile is private", async () => {
+	const user = userEvent.setup();
+	db.loadCountries.mockResolvedValue(["IT", "FR"]);
+	db.loadProfile.mockResolvedValue({ username: "ada", isPublic: false });
+	render(<App />);
+	await signIn();
+	await user.click(screen.getByRole("button", { name: "Share map" }));
+	expect(await navigator.clipboard.readText()).toBe(
+		`${location.origin}/?visited=FR.IT`,
+	);
+});
+
+it("remembers a manual dark mode choice", async () => {
+	render(<App />);
+	await userEvent.click(
+		screen.getByRole("button", { name: "Switch to dark mode" }),
+	);
+	expect(document.documentElement.dataset.theme).toBe("dark");
+	expect(localStorage.getItem("theme")).toBe("dark");
+	expect(
+		screen.getByRole("button", { name: "Switch to light mode" }),
+	).toBeInTheDocument();
+	delete document.documentElement.dataset.theme;
 });

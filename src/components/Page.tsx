@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
+import { currentTheme, saveTheme } from "../lib/theme";
 
 interface Props {
 	actions: ReactNode;
@@ -10,6 +11,26 @@ export const linkButtonClass =
 
 export const primaryButtonClass =
 	"font-mono text-xs md:text-[13px] uppercase tracking-wider bg-ink text-paper min-h-11 px-4 md:px-5 hover:bg-ink/90 disabled:opacity-50";
+
+const ThemeToggle = () => {
+	const [theme, setTheme] = useState(currentTheme);
+	const next = theme === "dark" ? "light" : "dark";
+	return (
+		<button
+			type="button"
+			aria-label={`Switch to ${next} mode`}
+			title={`Switch to ${next} mode`}
+			onClick={() => {
+				saveTheme(next);
+				setTheme(next);
+			}}
+			className="min-h-11 min-w-11 font-mono text-lg text-ink"
+		>
+			{/* \uFE0E: text glyphs, not emoji */}
+			{theme === "dark" ? "\u2600\uFE0E" : "\u263E\uFE0E"}
+		</button>
+	);
+};
 
 const Page = ({ actions, children }: Props) => (
 	<div className="max-w-6xl mx-auto px-4 md:px-8 pt-4 md:pt-8 pb-8 flex flex-col gap-8 md:gap-10">
@@ -38,7 +59,10 @@ const Page = ({ actions, children }: Props) => (
 					</a>
 				))}
 			</nav>
-			<div className="flex items-center gap-3 md:gap-6">{actions}</div>
+			<div className="flex items-center gap-3 md:gap-6">
+				<ThemeToggle />
+				{actions}
+			</div>
 		</header>
 
 		<main className="flex flex-col gap-8 md:gap-10">{children}</main>

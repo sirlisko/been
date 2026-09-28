@@ -31,9 +31,9 @@ export function writeLocalCountries(
 // The last shared map opened here, so "Make your own" doesn't lose it
 const SHARED_MAP_KEY = "lastSharedMap";
 
-export function rememberSharedMap(search: string) {
+export function rememberSharedMap(url: string) {
 	try {
-		localStorage.setItem(SHARED_MAP_KEY, search);
+		localStorage.setItem(SHARED_MAP_KEY, url);
 	} catch {}
 }
 
