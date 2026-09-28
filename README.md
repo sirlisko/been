@@ -1,15 +1,29 @@
 # 🛫 BEEN 🛬
 
-> Keep track of where you have BEEN 🌍 🌎 🌏 — [been.sirlisko.com](https://been.sirlisko.com/)
+> Keep track of where you've BEEN 🌍 🌎 🌏 — [been.sirlisko.com](https://been.sirlisko.com/)
+
+## Features
+
+- Mark visited countries on a world map; progress counts the 195 UN states, other places count as territories
+- Works without an account (saved in the browser); sign in with an email code to sync across devices
+- Share a read-only map of your countries via link
+- Collections: progress by continent plus themed sets (rivers, mountains, regions), shown on shared maps too
 
 ## Setup
 
-Copy `.env.example` to `.env` and fill in your Supabase credentials:
+Supabase is optional: without it the app runs in local-only mode.
+
+To enable accounts, copy `.env.example` to `.env` and fill in your Supabase credentials:
 
 ```
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
+
+Then, in the Supabase project:
+
+- run the SQL in `supabase/migrations/` (in order)
+- use `supabase/email-template-otp.html` as the Magic Link email template, so users receive a sign-in code
 
 ## Requirements
 
@@ -20,25 +34,25 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 To install all the dependencies:
 
 ```bash
-  pnpm install
+pnpm install
 ```
 
 To start the project locally:
 
 ```bash
-  pnpm dev
+pnpm dev
 ```
 
 To build:
 
 ```bash
-  pnpm build
+pnpm build
 ```
 
 To run tests:
 
 ```bash
-  pnpm test
+pnpm test
 ```
 
 ## Under the hood

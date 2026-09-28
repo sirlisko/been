@@ -21,7 +21,17 @@ const Page = ({ actions, children }: Props) => (
 				>
 					Been.
 				</a>
-				<span className="label hidden sm:inline">Travel record</span>
+				<nav aria-label="Sections" className="hidden sm:flex gap-4">
+					{[
+						["#world", "The world"],
+						["#entries", "Entries"],
+						["#collections", "Collections"],
+					].map(([href, label]) => (
+						<a key={href} href={href} className="label hover:text-ink">
+							{label}
+						</a>
+					))}
+				</nav>
 			</div>
 			<div className="flex items-center gap-3 md:gap-6">{actions}</div>
 		</header>
@@ -30,7 +40,7 @@ const Page = ({ actions, children }: Props) => (
 
 		<footer className="flex justify-between gap-4 pt-4 border-t border-ink font-mono text-xs text-muted">
 			<span>
-				Made with care by{" "}
+				Made with ❤️ by{" "}
 				<a
 					href="https://sirlisko.com"
 					target="_blank"
