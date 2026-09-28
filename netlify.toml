@@ -8,12 +8,7 @@
 [dev]
   command = "pnpm dev"
   port = 8888
-  targetPort = 5173
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+  targetPort = 5175
 
 [[headers]]
   for = "/*"

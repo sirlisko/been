@@ -1,3 +1,4 @@
+import shapes from "world-map-country-shapes";
 import type { CountryCode } from "../types";
 import { UN_STATES, getCountryName } from "./countries";
 
@@ -241,4 +242,80 @@ export function completedTitles(countries: CountryCode[]): Set<string> {
 			(c) => c.title,
 		),
 	);
+}
+
+type Box = [minX: number, minY: number, maxX: number, maxY: number];
+
+// The map's paths only use M/L/H/V/Z (absolute and relative), so a full SVG parser isn't needed
+export function pathBounds(d: string): Box {
+	const box: Box = [
+		Number.POSITIVE_INFINITY,
+		Number.POSITIVE_INFINITY,
+		Number.NEGATIVE_INFINITY,
+		Number.NEGATIVE_INFINITY,
+	];
+	const tokens = d.match(/[MLHVZ]|-?(?:\d+\.?\d*|\.\d+)/gi) ?? [];
+	let [x, y, startX, startY] = [0, 0, 0, 0];
+	let cmd = "M";
+	let i = 0;
+	const num = () => Number(tokens[i++]);
+	while (i < tokens.length) {
+		if (/[a-z]/i.test(tokens[i])) {
+			cmd = tokens[i++];
+			if (cmd.toUpperCase() === "Z") [x, y] = [startX, startY];
+			continue;
+		}
+		const rel = cmd === cmd.toLowerCase();
+		switch (cmd.toUpperCase()) {
+			case "H":
+				x = rel ? x + num() : num();
+				break;
+			case "V":
+				y = rel ? y + num() : num();
+				break;
+			default: {
+				const [dx, dy] = [num(), num()];
+				[x, y] = rel ? [x + dx, y + dy] : [dx, dy];
+				if (cmd.toUpperCase() === "M") {
+					[startX, startY] = [x, y];
+					cmd = rel ? "l" : "L";
+				}
+			}
+		}
+		box[0] = Math.min(box[0], x);
+		box[1] = Math.min(box[1], y);
+		box[2] = Math.max(box[2], x);
+		box[3] = Math.max(box[3], y);
+	}
+	return box;
+}
+
+const boundsCache = new Map<string, Box | null>();
+
+function countryBounds(code: string): Box | null {
+	if (!boundsCache.has(code)) {
+		const shape = shapes.find((s) => s.id === code)?.shape;
+		boundsCache.set(code, shape ? pathBounds(shape) : null);
+	}
+	return boundsCache.get(code) ?? null;
+}
+
+// A 2:1 viewBox framing the collection, padded so small ones keep some context
+export function collectionViewBox(codes: CountryCode[]): string | null {
+	const boxes = codes.map(countryBounds).filter((b) => b !== null);
+	if (boxes.length === 0) return null;
+	const [minX, minY, maxX, maxY] = boxes.reduce((a, b) => [
+		Math.min(a[0], b[0]),
+		Math.min(a[1], b[1]),
+		Math.max(a[2], b[2]),
+		Math.max(a[3], b[3]),
+	]);
+	const pad = Math.max(maxX - minX, maxY - minY) * 0.15 + 20;
+	let w = maxX - minX + pad * 2;
+	let h = maxY - minY + pad * 2;
+	if (w < h * 2) w = h * 2;
+	else h = w / 2;
+	const x = (minX + maxX - w) / 2;
+	const y = (minY + maxY - h) / 2;
+	return [x, y, w, h].map(Math.round).join(" ");
 }

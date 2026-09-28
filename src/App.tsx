@@ -1,5 +1,5 @@
 import type { User } from "@supabase/supabase-js";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AuthModal from "./components/AuthModal";
 import Collections from "./components/Collections";
 import CountryList from "./components/CountryList";
@@ -8,6 +8,12 @@ import Page, { linkButtonClass, primaryButtonClass } from "./components/Page";
 import Stats from "./components/Stats";
 import WorldMap from "./components/WorldMap";
 import { addCountries, loadCountries, removeCountry } from "./lib/countriesDB";
+import {
+	ACCOUNT_CACHE_KEY,
+	readLocalCountries,
+	readOwnCountries,
+	writeLocalCountries,
+} from "./lib/localCountries";
 import { supabase } from "./lib/supabase";
 import type { CountryCode } from "./types";
 import { completedTitles } from "./utils/collections";
@@ -18,42 +24,16 @@ import {
 	getCountryName,
 	toShareParam,
 } from "./utils/countries";
-
-const LOCAL_STORAGE_KEY = "visitedCountries";
-// Last list loaded for the signed-in account, shown on reload while it refreshes
-const ACCOUNT_CACHE_KEY = "accountCountries";
-
-function readLocalCountries(key = LOCAL_STORAGE_KEY): CountryCode[] {
-	try {
-		const raw = localStorage.getItem(key);
-		return raw ? JSON.parse(raw) : [];
-	} catch {
-		return [];
-	}
-}
-
-function writeLocalCountries(codes: CountryCode[], key = LOCAL_STORAGE_KEY) {
-	try {
-		if (codes.length > 0) {
-			localStorage.setItem(key, JSON.stringify(codes));
-		} else {
-			localStorage.removeItem(key);
-		}
-	} catch (e) {
-		console.warn("Could not save to localStorage:", e);
-	}
-}
-
 type Notice = { text: string; error?: boolean };
 
+const NUDGE_KEY = "signInNudgeDismissed";
+// Enough stamps that losing them to a cleared browser would hurt
+const NUDGE_AFTER = 10;
 const errorClass = "m-0 text-sm font-semibold text-stamp-red";
 
 const App = () => {
 	const [user, setUser] = useState<User | null>(null);
-	const [countries, setCountries] = useState<CountryCode[]>(() => {
-		const cached = readLocalCountries(ACCOUNT_CACHE_KEY);
-		return cached.length > 0 ? cached : readLocalCountries();
-	});
+	const [countries, setCountries] = useState<CountryCode[]>(readOwnCountries);
 	// Editing is blocked unless the account's list loaded: saving on top of a
 	// failed load would make the UI disagree with what's stored.
 	// Starts loading until the stored session is known.
@@ -63,7 +43,34 @@ const App = () => {
 	const [search, setSearch] = useState("");
 	const [showAuth, setShowAuth] = useState(false);
 	const [notice, setNotice] = useState<Notice | null>(null);
+	const [nudgeDismissed, setNudgeDismissed] = useState(() => {
+		try {
+			return localStorage.getItem(NUDGE_KEY) !== null;
+		} catch {
+			return false;
+		}
+	});
 	const [justCompleted, setJustCompleted] = useState<string | null>(null);
+	const bannerRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		if (!justCompleted) return;
+		const dismiss = (e: Event) => {
+			if (
+				e instanceof KeyboardEvent
+					? e.key === "Escape"
+					: !bannerRef.current?.contains(e.target as Node)
+			) {
+				setJustCompleted(null);
+			}
+		};
+		document.addEventListener("pointerdown", dismiss);
+		document.addEventListener("keydown", dismiss);
+		return () => {
+			document.removeEventListener("pointerdown", dismiss);
+			document.removeEventListener("keydown", dismiss);
+		};
+	}, [justCompleted]);
 
 	const syncUser = async (signedIn: User) => {
 		setUser(signedIn);
@@ -126,8 +133,10 @@ const App = () => {
 			: countries.filter((c) => c !== code);
 		setCountries(next);
 		const before = completedTitles(countries);
+		const after = completedTitles(next);
+		const gained = [...after].find((t) => !before.has(t));
 		setJustCompleted(
-			[...completedTitles(next)].find((t) => !before.has(t)) ?? null,
+			(shown) => gained ?? (shown && after.has(shown) ? shown : null),
 		);
 
 		if (!user) {
@@ -151,6 +160,13 @@ const App = () => {
 				error: true,
 			});
 		}
+	};
+
+	const dismissNudge = () => {
+		setNudgeDismissed(true);
+		try {
+			localStorage.setItem(NUDGE_KEY, "1");
+		} catch {}
 	};
 
 	const share = async () => {
@@ -215,22 +231,26 @@ const App = () => {
 		>
 			{showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
 
-			<div aria-live="polite" className="empty:hidden">
+			<div
+				ref={bannerRef}
+				aria-live="polite"
+				className="empty:hidden fixed z-20 inset-x-4 bottom-4 sm:left-auto sm:right-6 sm:bottom-6 sm:w-96"
+			>
 				{justCompleted && (
-					<div className="flex flex-wrap items-center gap-x-5 gap-y-3 px-5 py-4 bg-ink text-paper">
-						<span className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#E9B8A9]">
+					<div className="flex flex-col gap-3 p-5 bg-ink text-paper shadow-[6px_6px_0_theme(colors.stamp.red)]">
+						<span className="font-mono text-[11px] uppercase tracking-[0.18em] text-paper/70">
 							Collection complete
 						</span>
-						<span className="font-display text-xl md:text-[22px]">
+						<p className="m-0 font-display text-2xl leading-tight">
 							<em>{justCompleted}</em> — every country stamped.
-						</span>
-						<div className="flex gap-2 md:ml-auto">
+						</p>
+						<div className="flex items-center gap-2">
 							<button
 								type="button"
 								onClick={share}
-								className="font-mono text-xs uppercase tracking-wider min-h-11 px-4 border border-paper"
+								className="font-mono text-xs uppercase tracking-wider min-h-11 px-4 bg-paper text-ink hover:bg-paper/90"
 							>
-								Share it
+								Share map
 							</button>
 							<button
 								type="button"
@@ -272,6 +292,30 @@ const App = () => {
 						</button>
 					</p>
 				)}
+				{supabase &&
+					!user &&
+					remote === "ok" &&
+					!nudgeDismissed &&
+					countries.length >= NUDGE_AFTER && (
+						<p className="m-0 text-sm text-muted">
+							Your stamps are only saved in this browser.{" "}
+							<button
+								type="button"
+								onClick={() => setShowAuth(true)}
+								className="underline underline-offset-2 font-semibold text-ink"
+							>
+								Sign in to keep them
+							</button>{" "}
+							·{" "}
+							<button
+								type="button"
+								onClick={dismissNudge}
+								className="underline underline-offset-2"
+							>
+								Not now
+							</button>
+						</p>
+					)}
 				{notice && (
 					<p
 						className={
@@ -329,10 +373,6 @@ const App = () => {
 					</p>
 				)}
 			</section>
-
-			<h2 className="m-0 font-display italic font-normal text-3xl md:text-4xl">
-				Collections
-			</h2>
 
 			<section
 				id="collections"

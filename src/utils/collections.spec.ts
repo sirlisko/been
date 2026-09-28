@@ -3,10 +3,14 @@ import type { CountryCode } from "../types";
 import {
 	COLLECTIONS,
 	CONTINENTS,
+	collectionViewBox,
 	completedTitles,
+	pathBounds,
 	progress,
 } from "./collections";
 import { UN_STATES } from "./countries";
+
+const codes = (list: string) => list.split(" ") as CountryCode[];
 
 describe("continents", () => {
 	it("partition the UN states with the M49 counts", () => {
@@ -42,5 +46,26 @@ describe("collections", () => {
 		expect(completedTitles(["GB", "IE", "BE", "NL"] as CountryCode[])).toEqual(
 			new Set(["British Isles"]),
 		);
+	});
+});
+
+describe("pathBounds", () => {
+	it("tracks absolute and relative commands across subpaths", () => {
+		expect(pathBounds("M10 10l5 5h-20v-3zm1-20L30 1H2V40")).toEqual([
+			-5, -10, 30, 40,
+		]);
+	});
+});
+
+describe("collectionViewBox", () => {
+	it("frames the countries at 2:1", () => {
+		const [, , w, h] = (collectionViewBox(codes("NL BE LU")) ?? "")
+			.split(" ")
+			.map(Number);
+		expect(Math.abs(w - h * 2)).toBeLessThanOrEqual(1);
+	});
+
+	it("is null when no country has a shape", () => {
+		expect(collectionViewBox(codes("KI"))).toBeNull();
 	});
 });

@@ -13,26 +13,31 @@ export const primaryButtonClass =
 
 const Page = ({ actions, children }: Props) => (
 	<div className="max-w-6xl mx-auto px-4 md:px-8 pt-4 md:pt-8 pb-8 flex flex-col gap-8 md:gap-10">
-		<header className="flex items-center justify-between gap-4 pb-3 md:pb-5 border-b border-ink">
-			<div className="flex items-baseline gap-4">
-				<a
-					href="/"
-					className="font-display italic font-semibold text-3xl md:text-4xl tracking-tight no-underline"
-				>
-					Been.
-				</a>
-				<nav aria-label="Sections" className="hidden sm:flex gap-4">
-					{[
-						["#world", "The world"],
-						["#entries", "Entries"],
-						["#collections", "Collections"],
-					].map(([href, label]) => (
-						<a key={href} href={href} className="label hover:text-ink">
-							{label}
-						</a>
-					))}
-				</nav>
-			</div>
+		<header className="flex flex-wrap items-center justify-between gap-x-4 pb-3 md:pb-5 border-b border-ink">
+			<a
+				href="/"
+				className="font-display italic font-semibold text-3xl md:text-4xl tracking-tight no-underline"
+			>
+				Been.
+			</a>
+			<nav
+				aria-label="Sections"
+				className="order-last basis-full sm:order-none sm:basis-auto sm:mr-auto flex gap-4"
+			>
+				{[
+					["#world", "The world"],
+					["#entries", "Entries"],
+					["#collections", "Collections"],
+				].map(([href, label]) => (
+					<a
+						key={href}
+						href={href}
+						className="label hover:text-ink min-h-11 inline-flex items-center"
+					>
+						{label}
+					</a>
+				))}
+			</nav>
 			<div className="flex items-center gap-3 md:gap-6">{actions}</div>
 		</header>
 

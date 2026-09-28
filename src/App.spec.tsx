@@ -98,6 +98,23 @@ it("celebrates a completed collection", async () => {
 	expect(
 		screen.getByText("Collection complete").parentElement,
 	).toHaveTextContent("Baltic states");
+	await userEvent.click(screen.getByText("Collection complete"));
+	expect(screen.getByText("Collection complete")).toBeInTheDocument();
+	await userEvent.click(document.body);
+	expect(screen.queryByText("Collection complete")).not.toBeInTheDocument();
+});
+
+it("nudges anonymous users with many stamps to sign in", async () => {
+	localStorage.setItem(
+		"visitedCountries",
+		JSON.stringify("IT FR ES PT DE AT CH BE NL LU".split(" ")),
+	);
+	render(<App />);
+	await signedOut();
+	expect(screen.getByText(/only saved in this browser/)).toBeInTheDocument();
+	await userEvent.click(screen.getByRole("button", { name: "Not now" }));
+	expect(screen.queryByText(/only saved in this browser/)).toBeNull();
+	expect(localStorage.getItem("signInNudgeDismissed")).toBe("1");
 });
 
 it("shows the account's cached countries while the session is restored", async () => {
