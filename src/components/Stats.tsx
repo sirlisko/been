@@ -12,7 +12,7 @@ const Stats = ({ countries }: Props) => {
 			value: (
 				<>
 					<span className="text-stamp-red">{count}</span>
-					<span className="text-xl md:text-3xl"> / {TOTAL_COUNTRIES}</span>
+					<span className="text-xl/none md:text-3xl/none">{` / ${TOTAL_COUNTRIES}`}</span>
 				</>
 			),
 			label: "Countries",
@@ -36,7 +36,7 @@ const Stats = ({ countries }: Props) => {
 					className={`flex flex-col-reverse gap-1 py-3 md:py-4 px-3 md:px-7 first:pl-0 last:pr-0 ${i > 0 ? "border-l border-ink" : ""}`}
 				>
 					<dt className="label text-[10px] md:text-[11px]">{label}</dt>
-					<dd className="m-0 font-display text-4xl md:text-6xl leading-none">
+					<dd className="m-0 whitespace-nowrap font-display text-4xl md:text-6xl leading-none">
 						{value}
 					</dd>
 				</div>
