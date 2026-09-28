@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { loadPublicMap } from "../lib/countriesDB";
 import { readOwnCountries } from "../lib/localCountries";
 import type { CountryCode } from "../types";
 import Collections from "./Collections";
@@ -45,6 +47,42 @@ const GroupLabel = ({ label, codes, swatch }: Group) => (
 	</>
 );
 
+const makeYourOwn = (
+	<a
+		href="/"
+		className={`${primaryButtonClass} inline-flex items-center no-underline`}
+	>
+		Make your own
+	</a>
+);
+
+// A map shared as /@username, read live from the account
+export const ProfileMap = ({ username }: { username: string }) => {
+	// undefined while loading, null when nobody has this username
+	const [countries, setCountries] = useState<CountryCode[] | null>();
+	const [failed, setFailed] = useState(false);
+
+	useEffect(() => {
+		loadPublicMap(username).then(setCountries, (e) => {
+			console.error("Loading shared map failed:", e);
+			setFailed(true);
+		});
+	}, [username]);
+
+	if (countries) return <SharedMap countries={countries} name={username} />;
+	return (
+		<Page actions={makeYourOwn}>
+			<p className="m-0 py-10 text-center font-display italic text-xl text-muted">
+				{failed
+					? "Couldn't load this map, please try again."
+					: countries === null
+						? `There's no public map at @${username}.`
+						: "Loading…"}
+			</p>
+		</Page>
+	);
+};
+
 const SharedMap = ({ countries, name }: Props) => {
 	const groups = compare(countries, name);
 	const same = groups?.every((g, i) => i === 0 || g.codes.length === 0);
@@ -54,16 +92,7 @@ const SharedMap = ({ countries, name }: Props) => {
 		: [[], countries, []];
 
 	return (
-		<Page
-			actions={
-				<a
-					href="/"
-					className={`${primaryButtonClass} inline-flex items-center no-underline`}
-				>
-					Make your own
-				</a>
-			}
-		>
+		<Page actions={makeYourOwn}>
 			<section className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
 				<h1 className="m-0 font-display font-normal text-5xl md:text-7xl leading-[0.95] tracking-tight max-w-xl">
 					Where{" "}

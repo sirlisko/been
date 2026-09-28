@@ -30,3 +30,52 @@ export async function removeCountry(
 	const { error } = await db().delete().eq("user_id", userId).eq("code", code);
 	if (error) throw error;
 }
+
+// Mirrors the check on profiles.username
+export const USERNAME_PATTERN = /^[a-z0-9_-]{3,20}$/;
+
+export class UsernameTakenError extends Error {}
+
+export interface Profile {
+	username: string;
+	isPublic: boolean;
+}
+
+export async function loadProfile(userId: string): Promise<Profile | null> {
+	if (!supabase) throw new Error("Supabase is not configured");
+	const { data, error } = await supabase
+		.from("profiles")
+		.select("username, is_public")
+		.eq("user_id", userId)
+		.maybeSingle();
+	if (error) throw error;
+	return data && { username: data.username, isPublic: data.is_public };
+}
+
+// null removes the profile, freeing the username
+export async function saveProfile(
+	userId: string,
+	profile: Profile | null,
+): Promise<void> {
+	if (!supabase) throw new Error("Supabase is not configured");
+	const profiles = supabase.from("profiles");
+	const { error } = profile
+		? await profiles.upsert({
+				user_id: userId,
+				username: profile.username,
+				is_public: profile.isPublic,
+			})
+		: await profiles.delete().eq("user_id", userId);
+	if (error?.code === "23505") throw new UsernameTakenError();
+	if (error) throw error;
+}
+
+// null when nobody has this username, or their map is private
+export async function loadPublicMap(
+	username: string,
+): Promise<CountryCode[] | null> {
+	if (!supabase) throw new Error("Supabase is not configured");
+	const { data, error } = await supabase.rpc("public_map", { name: username });
+	if (error) throw error;
+	return data;
+}

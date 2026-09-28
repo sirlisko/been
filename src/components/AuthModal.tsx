@@ -1,3 +1,4 @@
+import type { AuthError } from "@supabase/supabase-js";
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import Modal from "./Modal";
@@ -8,8 +9,18 @@ interface Props {
 
 const inputClass =
 	"w-full border-0 border-b-2 border-ink bg-transparent py-2 font-display text-xl text-ink placeholder:text-muted focus:outline-none focus:border-stamp-red";
-const buttonClass =
+export const buttonClass =
 	"font-mono text-[13px] uppercase tracking-wider bg-ink text-paper min-h-12 px-8 hover:bg-ink/90 disabled:opacity-50";
+
+export function authErrorMessage(error: AuthError): string {
+	if (error.status === 429) {
+		return "Too many sign-in attempts. Wait a few minutes and try again.";
+	}
+	if (error.code === "otp_expired") {
+		return "That code is wrong or has expired.";
+	}
+	return error.message;
+}
 
 // The App's onAuthStateChange listener handles SIGNED_IN and closes this modal.
 const AuthModal = ({ onClose }: Props) => {
@@ -29,7 +40,7 @@ const AuthModal = ({ onClose }: Props) => {
 			options: { shouldCreateUser: true },
 		});
 		setSubmitting(false);
-		if (error) setError(error.message);
+		if (error) setError(authErrorMessage(error));
 		else setStep("code");
 	};
 
@@ -44,7 +55,7 @@ const AuthModal = ({ onClose }: Props) => {
 			type: "email",
 		});
 		setSubmitting(false);
-		if (error) setError(error.message);
+		if (error) setError(authErrorMessage(error));
 	};
 
 	const errorMessage = error && (

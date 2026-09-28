@@ -18,7 +18,7 @@ const Modal = ({ onClose, children }: Props) => {
 			ref={dialog}
 			onClose={onClose}
 			onClick={(e) => e.target === dialog.current && onClose()}
-			className="p-0 w-[calc(100%-2rem)] max-w-lg max-h-[95vh] bg-page text-ink border border-ink outline outline-1 outline-ink outline-offset-4 backdrop:bg-ink/60"
+			className="p-0 w-[calc(100%-2rem)] max-w-lg max-h-[95vh] bg-page text-ink border border-ink outline outline-1 outline-ink outline-offset-4 backdrop:bg-[#1F2A44]/60"
 		>
 			<div className="relative p-6 md:p-10">
 				<button
