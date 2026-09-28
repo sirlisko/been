@@ -1,51 +1,37 @@
-import { type ReactElement, useEffect } from "react";
-import { createPortal } from "react-dom";
+import { type ReactElement, useEffect, useRef } from "react";
 
 interface Props {
-	isModalOpen?: boolean;
 	onClose: () => void;
 	children: ReactElement;
 }
 
-const Modal = ({ isModalOpen, onClose, children }: Props) => {
+const Modal = ({ onClose, children }: Props) => {
+	const dialog = useRef<HTMLDialogElement>(null);
+
 	useEffect(() => {
-		if (!isModalOpen) return;
-		const handleKey = (e: KeyboardEvent) => {
-			if (e.key === "Escape") onClose();
-		};
-		document.addEventListener("keydown", handleKey);
-		document.body.style.overflow = "hidden";
-		return () => {
-			document.removeEventListener("keydown", handleKey);
-			document.body.style.overflow = "";
-		};
-	}, [isModalOpen, onClose]);
+		dialog.current?.showModal();
+	}, []);
 
-	if (!isModalOpen) return null;
-
-	return createPortal(
-		// biome-ignore lint/a11y/useKeyWithClickEvents: backdrop click handled by Escape key above
-		<div
-			className="fixed inset-0 bg-black/70 z-10 flex items-center justify-center"
-			onClick={onClose}
+	return (
+		// biome-ignore lint/a11y/useKeyWithClickEvents: native <dialog> already closes on Escape
+		<dialog
+			ref={dialog}
+			onClose={onClose}
+			onClick={(e) => e.target === dialog.current && onClose()}
+			className="p-0 w-[calc(100%-2rem)] max-w-lg max-h-[95vh] bg-page text-ink border border-ink outline outline-1 outline-ink outline-offset-4 backdrop:bg-ink/60"
 		>
-			{/* biome-ignore lint/a11y/useKeyWithClickEvents: inner click just stops propagation */}
-			<div
-				className="relative w-[90%] p-10 bg-white rounded-md shadow-2xl max-w-[700px] max-h-[95vh] overflow-y-auto"
-				onClick={(e) => e.stopPropagation()}
-			>
+			<div className="relative p-6 md:p-10">
 				<button
 					type="button"
 					onClick={onClose}
 					aria-label="Close"
-					className="absolute top-4 right-4 border-none p-0 text-2xl bg-transparent leading-none"
+					className="absolute top-2 right-2 w-11 h-11 border-none bg-transparent font-mono text-2xl leading-none text-ink"
 				>
 					×
 				</button>
 				{children}
 			</div>
-		</div>,
-		document.body,
+		</dialog>
 	);
 };
 

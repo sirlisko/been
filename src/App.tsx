@@ -1,17 +1,20 @@
 import type { User } from "@supabase/supabase-js";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AuthModal from "./components/AuthModal";
 import CountryList from "./components/CountryList";
 import CountrySearch from "./components/CountrySearch";
+import Page, { linkButtonClass, primaryButtonClass } from "./components/Page";
 import Stats from "./components/Stats";
 import WorldMap from "./components/WorldMap";
-import { loadCountries, saveCountries } from "./lib/countriesDB";
+import { addCountries, loadCountries, removeCountry } from "./lib/countriesDB";
 import { supabase } from "./lib/supabase";
 import type { CountryCode } from "./types";
 import {
 	ALL_COUNTRY_CODES,
-	TOTAL_COUNTRIES,
+	countStates,
 	filterCountries,
+	getCountryName,
+	toShareParam,
 } from "./utils/countries";
 
 const LOCAL_STORAGE_KEY = "visitedCountries";
@@ -21,182 +24,244 @@ function readLocalCountries(): CountryCode[] {
 		const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
 		return raw ? JSON.parse(raw) : [];
 	} catch {
-		localStorage.removeItem(LOCAL_STORAGE_KEY);
 		return [];
 	}
 }
 
+function writeLocalCountries(codes: CountryCode[]) {
+	try {
+		if (codes.length > 0) {
+			localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(codes));
+		} else {
+			localStorage.removeItem(LOCAL_STORAGE_KEY);
+		}
+	} catch (e) {
+		console.warn("Could not save to localStorage:", e);
+	}
+}
+
+type Notice = { text: string; error?: boolean };
+
+const errorClass = "m-0 text-sm font-semibold text-stamp-red";
+
 const App = () => {
 	const [user, setUser] = useState<User | null>(null);
-	const [countries, setCountries] = useState<CountryCode[]>([]);
+	const [countries, setCountries] = useState<CountryCode[]>(readLocalCountries);
+	// Editing is blocked unless the account's list loaded: saving on top of a
+	// failed load would make the UI disagree with what's stored.
+	const [remote, setRemote] = useState<"loading" | "ok" | "failed">("ok");
 	const [search, setSearch] = useState("");
 	const [showAuth, setShowAuth] = useState(false);
-	const [loading, setLoading] = useState(true);
-	const [syncError, setSyncError] = useState<string | null>(null);
-	const handlingSignIn = useRef(false);
+	const [notice, setNotice] = useState<Notice | null>(null);
 
-	const handleSignIn = async (signedInUser: User) => {
-		handlingSignIn.current = true;
+	const syncUser = async (signedIn: User) => {
+		setUser(signedIn);
+		setShowAuth(false);
+		setRemote("loading");
 		try {
 			const local = readLocalCountries();
-			const dbCountries = await loadCountries(signedInUser.id);
-			const merged = [...new Set([...dbCountries, ...local])];
 			if (local.length > 0) {
-				await saveCountries(signedInUser.id, merged);
+				await addCountries(signedIn.id, local);
+				writeLocalCountries([]);
 			}
-			localStorage.removeItem(LOCAL_STORAGE_KEY);
-			setCountries(merged);
+			setCountries(await loadCountries(signedIn.id));
+			setRemote("ok");
 		} catch (e) {
 			console.error("Sync failed:", e);
-			setCountries(readLocalCountries());
+			setRemote("failed");
 		}
-		setUser(signedInUser);
-		setShowAuth(false);
-		handlingSignIn.current = false;
 	};
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: bootstrap effect
+	// biome-ignore lint/correctness/useExhaustiveDependencies: syncUser only touches state setters
 	useEffect(() => {
-		supabase.auth.getSession().then(({ data }) => {
-			const sessionUser = data.session?.user ?? null;
-			if (sessionUser) {
-				loadCountries(sessionUser.id).then(setCountries).catch(console.error);
-			} else {
-				setCountries(readLocalCountries());
-			}
-			setUser(sessionUser);
-			setLoading(false);
-		});
-
-		const { data: listener } = supabase.auth.onAuthStateChange(
-			(event, session) => {
+		if (!supabase) return;
+		const { data } = supabase.auth.onAuthStateChange((event, session) => {
+			// Deferred: awaiting supabase calls inside this callback can deadlock the auth lock.
+			setTimeout(() => {
 				if (event === "SIGNED_OUT") {
 					setUser(null);
+					setRemote("ok");
 					setCountries(readLocalCountries());
+					setNotice({
+						text: "Signed out. Your countries are saved to your account.",
+					});
+				} else if (
+					(event === "INITIAL_SESSION" || event === "SIGNED_IN") &&
+					session
+				) {
+					syncUser(session.user);
 				}
-				if (event === "SIGNED_IN" && session?.user && !handlingSignIn.current) {
-					handleSignIn(session.user);
-				}
-			},
-		);
-		return () => listener.subscription.unsubscribe();
+			}, 0);
+		});
+		return () => data.subscription.unsubscribe();
 	}, []);
 
 	const toggleCountry = async (code: CountryCode) => {
-		const prev = countries;
-		const isSelected = countries.includes(code);
-		const updated = isSelected
-			? countries.filter((c) => c !== code)
-			: [...countries, code];
+		if (user && remote !== "ok") return;
+		const adding = !countries.includes(code);
+		const next = adding
+			? [...countries, code]
+			: countries.filter((c) => c !== code);
+		setCountries(next);
 
-		setCountries(updated);
-
-		if (user) {
-			try {
-				await saveCountries(user.id, updated);
-				setSyncError(null);
-			} catch {
-				setCountries(prev);
-				setSyncError("Failed to save — please try again.");
-			}
-		} else {
-			localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+		if (!user) {
+			writeLocalCountries(next);
+			return;
+		}
+		try {
+			await (adding
+				? addCountries(user.id, [code])
+				: removeCountry(user.id, code));
+			setNotice(null);
+		} catch (e) {
+			console.error("Save failed:", e);
+			setCountries((current) => {
+				const without = current.filter((c) => c !== code);
+				return adding ? without : [...without, code];
+			});
+			setNotice({
+				text: `Couldn't save ${getCountryName(code)}, please try again.`,
+				error: true,
+			});
 		}
 	};
 
-	const count = countries.length;
-	const percentage = ((count / TOTAL_COUNTRIES) * 100).toFixed(1);
+	const share = async () => {
+		const url = `${location.origin}/?visited=${toShareParam(countries)}`;
+		if (navigator.share) {
+			await navigator.share({ title: "Where I've been", url }).catch(() => {});
+			return;
+		}
+		try {
+			await navigator.clipboard.writeText(url);
+			setNotice({ text: "Link copied to clipboard." });
+		} catch {
+			setNotice({ text: `Share this link: ${url}` });
+		}
+	};
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: intentional
+	const { count, percentage } = countStates(countries);
+
 	useEffect(() => {
 		document.title =
 			count > 0 ? `Been — ${count} countries (${percentage}%)` : "Been";
-	}, [count]);
+	}, [count, percentage]);
 
 	const searchResults = useMemo(
 		() => (search ? filterCountries(ALL_COUNTRY_CODES, search) : []),
 		[search],
 	);
-	const highlighted = search ? searchResults : [];
-
-	if (loading)
-		return (
-			<div className="text-center mt-20 text-gray-400">Loading&hellip;</div>
-		);
 
 	return (
-		<div>
-			<header className="font-luckiest-guy text-center my-12">
-				<h1 className="text-5xl">Been.</h1>
-				<p className="font-sans font-normal text-gray-400 mt-1">
-					where have you been?
-				</p>
-				{user ? (
-					<button
-						type="button"
-						onClick={() => supabase.auth.signOut()}
-						className="text-xs font-sans font-normal text-gray-400 underline mt-1"
-					>
-						sign out
-					</button>
-				) : (
-					<button
-						type="button"
-						onClick={() => setShowAuth(true)}
-						className="text-xs font-sans font-normal text-gray-400 underline mt-1"
-					>
-						sign in to sync
-					</button>
+		<Page
+			actions={
+				<>
+					{countries.length > 0 && (
+						<button type="button" onClick={share} className={linkButtonClass}>
+							Share map
+						</button>
+					)}
+					{supabase &&
+						(user ? (
+							<button
+								type="button"
+								onClick={() => supabase?.auth.signOut()}
+								className={linkButtonClass}
+							>
+								Sign out
+							</button>
+						) : (
+							<button
+								type="button"
+								onClick={() => setShowAuth(true)}
+								className={primaryButtonClass}
+							>
+								Sign in<span className="hidden md:inline"> to sync</span>
+							</button>
+						))}
+				</>
+			}
+		>
+			{showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+
+			<section className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+				<h1 className="m-0 font-display font-normal text-5xl md:text-7xl leading-[0.95] tracking-tight max-w-xl">
+					Where have <em className="text-stamp-red">you</em> been?
+				</h1>
+				<Stats countries={countries} />
+			</section>
+
+			<div
+				aria-live="polite"
+				className="empty:hidden -my-4 flex flex-col gap-2"
+			>
+				{user && remote === "loading" && (
+					<p className="label m-0">Loading your stamps&hellip;</p>
 				)}
-			</header>
-
-			{showAuth && (
-				<AuthModal
-					onClose={() => setShowAuth(false)}
-					onSuccess={handleSignIn}
-				/>
-			)}
-
-			<WorldMap
-				selected={countries}
-				highlighted={highlighted}
-				onToggle={toggleCountry}
-			/>
-
-			<Stats count={count} />
-
-			<CountrySearch
-				value={search}
-				onChange={setSearch}
-				results={searchResults}
-				selected={countries}
-				onSelect={toggleCountry}
-			/>
-
-			<CountryList
-				countries={countries}
-				selected={countries}
-				onToggle={toggleCountry}
-			/>
-
-			{syncError && (
-				<p className="text-center text-red-500 text-sm mt-2">{syncError}</p>
-			)}
-
-			<footer className="text-center mt-8 mb-4">
-				<p>
-					Made with ♥ by{" "}
-					<a
-						href="https://sirlisko.com"
-						target="_blank"
-						rel="noopener noreferrer"
-						className="text-current font-bold"
+				{user && remote === "failed" && (
+					<p role="alert" className={errorClass}>
+						Couldn&apos;t load your stamps, so editing is paused.{" "}
+						<button
+							type="button"
+							onClick={() => syncUser(user)}
+							className="underline underline-offset-2 font-semibold"
+						>
+							Retry
+						</button>
+					</p>
+				)}
+				{notice && (
+					<p
+						className={
+							notice.error ? errorClass : "m-0 text-sm text-muted break-all"
+						}
 					>
-						Luca Lischetti (@sirLisko)
-					</a>
-				</p>
-			</footer>
-		</div>
+						{notice.text}
+					</p>
+				)}
+			</div>
+
+			<section className="page-frame px-2 md:px-8 pt-9 md:pt-10 pb-2 md:pb-6">
+				<div className="label absolute top-3 left-4 right-4 flex justify-between">
+					<span>Page 01 — The world</span>
+					<span className="hidden sm:inline">Tap a country to stamp it</span>
+				</div>
+				<WorldMap
+					selected={countries}
+					highlighted={searchResults}
+					onToggle={toggleCountry}
+				/>
+			</section>
+
+			<div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+				<h2 className="m-0 font-display italic font-normal text-3xl md:text-4xl">
+					Stamps
+				</h2>
+				<CountrySearch
+					value={search}
+					onChange={setSearch}
+					results={searchResults}
+					selected={countries}
+					onSelect={toggleCountry}
+				/>
+			</div>
+
+			<section className="page-frame px-2 md:px-6 pt-11 pb-6">
+				<div className="label absolute top-3 left-4 right-4 flex justify-between">
+					<span>Page 02 — Entries</span>
+					{countries.length > 0 && (
+						<span className="hidden sm:inline">Tap a stamp to remove it</span>
+					)}
+				</div>
+				{countries.length > 0 ? (
+					<CountryList countries={countries} onToggle={toggleCountry} />
+				) : (
+					<p className="m-0 py-10 text-center font-display italic text-xl text-muted">
+						No stamps yet. Tap a country on the map, or search for one.
+					</p>
+				)}
+			</section>
+		</Page>
 	);
 };
 

@@ -1,79 +1,78 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { CountryCode } from "../types";
 
-const { mockSingle, mockUpsert } = vi.hoisted(() => ({
-	mockSingle: vi.fn(),
+const { mockSelectEq, mockUpsert, mockDeleteEq } = vi.hoisted(() => ({
+	mockSelectEq: vi.fn(),
 	mockUpsert: vi.fn(),
+	mockDeleteEq: vi.fn(),
 }));
 
 vi.mock("./supabase", () => ({
 	supabase: {
 		from: vi.fn().mockReturnValue({
-			select: vi.fn().mockReturnValue({
-				eq: vi.fn().mockReturnValue({
-					single: mockSingle,
-				}),
-			}),
+			select: vi.fn().mockReturnValue({ eq: mockSelectEq }),
 			upsert: mockUpsert,
+			delete: vi.fn().mockReturnValue({
+				eq: vi.fn().mockReturnValue({ eq: mockDeleteEq }),
+			}),
 		}),
 	},
 }));
 
-import { loadCountries, saveCountries } from "./countriesDB";
+import { addCountries, loadCountries, removeCountry } from "./countriesDB";
+
+beforeEach(() => {
+	vi.clearAllMocks();
+});
 
 describe("loadCountries", () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-	});
-
-	it("returns empty array when no record exists (PGRST116)", async () => {
-		mockSingle.mockResolvedValue({
-			data: null,
-			error: { code: "PGRST116", message: "No rows returned" },
+	it("returns the codes of the user's rows", async () => {
+		mockSelectEq.mockResolvedValue({
+			data: [{ code: "US" }, { code: "FR" }],
+			error: null,
 		});
-		await expect(loadCountries("user-1")).resolves.toEqual([]);
+		await expect(loadCountries("user-1")).resolves.toEqual(["US", "FR"]);
 	});
 
-	it("returns countries when a record exists", async () => {
-		const countries = ["US", "FR"] as CountryCode[];
-		mockSingle.mockResolvedValue({ data: { countries }, error: null });
-		await expect(loadCountries("user-1")).resolves.toEqual(countries);
-	});
-
-	it("throws on unexpected database errors", async () => {
+	it("throws on database errors", async () => {
 		const err = { code: "PGRST301", message: "Unauthorized" };
-		mockSingle.mockResolvedValue({ data: null, error: err });
+		mockSelectEq.mockResolvedValue({ data: null, error: err });
 		await expect(loadCountries("user-1")).rejects.toEqual(err);
 	});
 });
 
-describe("saveCountries", () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-	});
-
-	it("upserts the country list for the user", async () => {
+describe("addCountries", () => {
+	it("upserts one row per country, ignoring duplicates", async () => {
 		mockUpsert.mockResolvedValue({ error: null });
-		const countries = ["US", "FR"] as CountryCode[];
-		await saveCountries("user-1", countries);
+		await addCountries("user-1", ["US", "FR"] as CountryCode[]);
 		expect(mockUpsert).toHaveBeenCalledWith(
-			expect.objectContaining({ user_id: "user-1", countries }),
-			{ onConflict: "user_id" },
-		);
-	});
-
-	it("includes updated_at in the upsert payload", async () => {
-		mockUpsert.mockResolvedValue({ error: null });
-		await saveCountries("user-1", []);
-		expect(mockUpsert).toHaveBeenCalledWith(
-			expect.objectContaining({ updated_at: expect.any(String) }),
-			expect.any(Object),
+			[
+				{ user_id: "user-1", code: "US" },
+				{ user_id: "user-1", code: "FR" },
+			],
+			{ onConflict: "user_id,code", ignoreDuplicates: true },
 		);
 	});
 
 	it("throws when the upsert fails", async () => {
 		const err = { code: "500", message: "Internal error" };
 		mockUpsert.mockResolvedValue({ error: err });
-		await expect(saveCountries("user-1", [])).rejects.toEqual(err);
+		await expect(addCountries("user-1", [])).rejects.toEqual(err);
+	});
+});
+
+describe("removeCountry", () => {
+	it("deletes the row", async () => {
+		mockDeleteEq.mockResolvedValue({ error: null });
+		await removeCountry("user-1", "US" as CountryCode);
+		expect(mockDeleteEq).toHaveBeenCalledWith("code", "US");
+	});
+
+	it("throws when the delete fails", async () => {
+		const err = { code: "500", message: "Internal error" };
+		mockDeleteEq.mockResolvedValue({ error: err });
+		await expect(removeCountry("user-1", "US" as CountryCode)).rejects.toEqual(
+			err,
+		);
 	});
 });

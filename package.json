@@ -2,13 +2,12 @@
 	"name": "been",
 	"version": "0.1.0",
 	"private": true,
-	"homepage": "https://been.sirlisko.com",
 	"scripts": {
 		"dev": "vite",
 		"start": "vite",
 		"build": "tsc -b && vite build",
-		"test": "npm run lint && npm run unit && npm run integration",
-		"unit": "vitest",
+		"test": "pnpm lint && pnpm typecheck && pnpm unit",
+		"unit": "vitest run",
 		"lint": "biome check .",
 		"format": "biome format --write .",
 		"test:coverage": "vitest run --coverage",
@@ -23,7 +22,6 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
-		"@netlify/functions": "^5.1.5",
 		"@testing-library/jest-dom": "^6.6.3",
 		"@testing-library/react": "^16.3.0",
 		"@testing-library/user-event": "^14.6.1",

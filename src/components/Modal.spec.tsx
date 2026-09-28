@@ -1,29 +1,28 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 
 import Modal from "./Modal";
 
 describe("Modal Component", () => {
-	const props = {
-		isModalOpen: true,
-		onClose: vi.fn(),
-	};
-
-	it("should render properly", () => {
+	it("opens as a modal dialog", () => {
 		render(
-			<Modal {...props}>
+			<Modal onClose={vi.fn()}>
 				<div data-testid="content">foo</div>
 			</Modal>,
 		);
+		expect(screen.getByRole("dialog")).toHaveAttribute("open");
 		expect(screen.getByTestId("content")).toBeVisible();
 	});
 
-	it("should NOT render if isModalOpen is false", () => {
+	it("calls onClose from the close button", async () => {
+		const onClose = vi.fn();
 		render(
-			<Modal {...props} isModalOpen={false}>
-				<div data-testid="content">foo</div>
+			<Modal onClose={onClose}>
+				<div>foo</div>
 			</Modal>,
 		);
-		expect(screen.queryByTestId("content")).not.toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Close" }));
+		expect(onClose).toHaveBeenCalled();
 	});
 });

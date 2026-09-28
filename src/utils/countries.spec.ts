@@ -3,32 +3,20 @@ import type { CountryCode } from "../types";
 import {
 	ALL_COUNTRY_CODES,
 	TOTAL_COUNTRIES,
+	UN_STATES,
 	filterCountries,
 	getCountryName,
-	getFlagUrl,
+	parseShareParam,
+	toShareParam,
 } from "./countries";
 
 describe("getCountryName", () => {
 	it("returns the country name for a known code", () => {
-		expect(getCountryName("US" as CountryCode)).toBe(
-			"United States of America (the)",
-		);
+		expect(getCountryName("US" as CountryCode)).toBe("United States");
 	});
 
 	it("falls back to the code for an unknown code", () => {
 		expect(getCountryName("XX" as CountryCode)).toBe("XX");
-	});
-});
-
-describe("getFlagUrl", () => {
-	it("returns a flagcdn URL with lowercased code", () => {
-		expect(getFlagUrl("US" as CountryCode)).toBe(
-			"https://flagcdn.com/w40/us.png",
-		);
-	});
-
-	it("lowercases the country code", () => {
-		expect(getFlagUrl("GB" as CountryCode)).toContain("gb");
 	});
 });
 
@@ -41,6 +29,10 @@ describe("filterCountries", () => {
 
 	it("filters by country name", () => {
 		expect(filterCountries(codes, "france")).toEqual(["FR"]);
+	});
+
+	it("also matches the official ISO name", () => {
+		expect(filterCountries(codes, "america")).toEqual(["US"]);
 	});
 
 	it("returns multiple matches", () => {
@@ -71,8 +63,24 @@ describe("ALL_COUNTRY_CODES", () => {
 	});
 });
 
-describe("TOTAL_COUNTRIES", () => {
-	it("is 195", () => {
+describe("UN_STATES", () => {
+	it("has 195 states, all known country codes", () => {
 		expect(TOTAL_COUNTRIES).toBe(195);
+		for (const code of UN_STATES) expect(ALL_COUNTRY_CODES).toContain(code);
+	});
+});
+
+describe("share param", () => {
+	it("round-trips a list of codes", () => {
+		const codes = ["IT", "FR"] as CountryCode[];
+		expect(parseShareParam(toShareParam(codes))).toEqual(["FR", "IT"]);
+	});
+
+	it("drops unknown codes and duplicates", () => {
+		expect(parseShareParam("it.xx.IT.<script>")).toEqual(["IT"]);
+	});
+
+	it("returns null when there's no param", () => {
+		expect(parseShareParam(null)).toBeNull();
 	});
 });

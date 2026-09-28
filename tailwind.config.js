@@ -4,13 +4,23 @@ export default {
 	theme: {
 		extend: {
 			colors: {
-				accent: "#FF6B6B",
-				alternate: "#4ECDC4",
-				"gray-light": "#E0E0E0",
-				been: "#c2185b",
+				paper: "#F3EDE2",
+				page: "#F8F4EC",
+				ink: "#1F2A44",
+				muted: "#6B6457",
+				line: "#CFC6B4",
+				land: "#E2D9C6",
+				stamp: {
+					red: "#B8432F",
+					blue: "#2B4C8C",
+					green: "#2F6B4F",
+					purple: "#6A3E7C",
+				},
 			},
 			fontFamily: {
-				"luckiest-guy": ['"Luckiest Guy"', "cursive"],
+				display: ['"Fraunces"', "Georgia", "serif"],
+				sans: ['"IBM Plex Sans"', "system-ui", "sans-serif"],
+				mono: ['"IBM Plex Mono"', "ui-monospace", "monospace"],
 			},
 		},
 	},

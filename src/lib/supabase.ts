@@ -4,9 +4,9 @@ const url = import.meta.env.VITE_SUPABASE_URL;
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!url || !key) {
-	throw new Error(
-		"Missing Supabase environment variables: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY must be set.",
+	console.warn(
+		"VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY not set: running in local-only mode.",
 	);
 }
 
-export const supabase = createClient(url, key);
+export const supabase = url && key ? createClient(url, key) : null;
