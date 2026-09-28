@@ -117,6 +117,17 @@ it("nudges anonymous users with many stamps to sign in", async () => {
 	expect(localStorage.getItem("signInNudgeDismissed")).toBe("1");
 });
 
+it("links back to the last shared map until forgotten", async () => {
+	localStorage.setItem("lastSharedMap", "?visited=IT.FR&name=Luca");
+	render(<App />);
+	expect(
+		screen.getByRole("link", { name: "Compare with the map you were sent" }),
+	).toHaveAttribute("href", "/?visited=IT.FR&name=Luca");
+	await userEvent.click(screen.getByRole("button", { name: "Forget it" }));
+	expect(screen.queryByText("Compare with the map you were sent")).toBeNull();
+	expect(localStorage.getItem("lastSharedMap")).toBeNull();
+});
+
 it("shows the account's cached countries while the session is restored", async () => {
 	localStorage.setItem("accountCountries", '["IT","FR"]');
 	render(<App />);

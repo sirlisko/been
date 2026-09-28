@@ -10,8 +10,10 @@ import WorldMap from "./components/WorldMap";
 import { addCountries, loadCountries, removeCountry } from "./lib/countriesDB";
 import {
 	ACCOUNT_CACHE_KEY,
+	forgetSharedMap,
 	readLocalCountries,
 	readOwnCountries,
+	readSharedMap,
 	writeLocalCountries,
 } from "./lib/localCountries";
 import { supabase } from "./lib/supabase";
@@ -51,6 +53,7 @@ const App = () => {
 		}
 	});
 	const [justCompleted, setJustCompleted] = useState<string | null>(null);
+	const [sharedMap, setSharedMap] = useState(readSharedMap);
 	const bannerRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
@@ -167,6 +170,11 @@ const App = () => {
 		try {
 			localStorage.setItem(NUDGE_KEY, "1");
 		} catch {}
+	};
+
+	const forgetShared = () => {
+		forgetSharedMap();
+		setSharedMap(null);
 	};
 
 	const share = async () => {
@@ -316,6 +324,24 @@ const App = () => {
 							</button>
 						</p>
 					)}
+				{sharedMap && (
+					<p className="m-0 text-sm text-muted">
+						<a
+							href={`/${sharedMap}`}
+							className="underline underline-offset-2 font-semibold text-ink"
+						>
+							Compare with the map you were sent
+						</a>{" "}
+						·{" "}
+						<button
+							type="button"
+							onClick={forgetShared}
+							className="underline underline-offset-2"
+						>
+							Forget it
+						</button>
+					</p>
+				)}
 				{notice && (
 					<p
 						className={

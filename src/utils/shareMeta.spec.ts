@@ -10,6 +10,12 @@ it("puts the shared map's stats in the preview tags", () => {
 	);
 });
 
+it("names the sharer in the preview, escaped", () => {
+	expect(shareMeta(html, "it", 'Lu"ca<')).toContain(
+		'content="See where Lu&quot;ca&lt;\'s been on Been."',
+	);
+});
+
 it("leaves the page alone without any countries", () => {
 	expect(shareMeta(html, "pr")).toBe(html);
 });

@@ -28,6 +28,29 @@ export function writeLocalCountries(
 	}
 }
 
+// The last shared map opened here, so "Make your own" doesn't lose it
+const SHARED_MAP_KEY = "lastSharedMap";
+
+export function rememberSharedMap(search: string) {
+	try {
+		localStorage.setItem(SHARED_MAP_KEY, search);
+	} catch {}
+}
+
+export function readSharedMap(): string | null {
+	try {
+		return localStorage.getItem(SHARED_MAP_KEY);
+	} catch {
+		return null;
+	}
+}
+
+export function forgetSharedMap() {
+	try {
+		localStorage.removeItem(SHARED_MAP_KEY);
+	} catch {}
+}
+
 // The account's cached list if signed in on this device, else the anonymous one
 export function readOwnCountries(): CountryCode[] {
 	const cached = readLocalCountries(ACCOUNT_CACHE_KEY);

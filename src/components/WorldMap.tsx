@@ -6,18 +6,26 @@ import { getCountryName } from "../utils/countries";
 interface Props {
 	selected: CountryCode[];
 	highlighted?: CountryCode[];
+	shared?: CountryCode[];
 	onToggle?: (code: CountryCode) => void;
 }
 
 const ZOOM_LEVELS = [1, 2, 4];
 
-const WorldMap = ({ selected, highlighted = [], onToggle }: Props) => {
+const WorldMap = ({
+	selected,
+	highlighted = [],
+	shared = [],
+	onToggle,
+}: Props) => {
 	const [zoom, setZoom] = useState(1);
 	const scroller = useRef<HTMLDivElement>(null);
 	const selectedSet = new Set(selected);
 	const highlightedSet = new Set(highlighted);
+	const sharedSet = new Set(shared);
 
 	const getFill = (code: CountryCode) => {
+		if (sharedSet.has(code)) return "fill-stamp-green";
 		if (selectedSet.has(code)) return "fill-stamp-red";
 		if (highlightedSet.has(code)) return "fill-stamp-blue";
 		return "fill-land";
