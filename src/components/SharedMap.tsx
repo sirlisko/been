@@ -27,17 +27,26 @@ const SharedMap = ({ countries }: Props) => (
 			<Stats countries={countries} />
 		</section>
 
-		<section className="page-frame px-2 md:px-8 pt-9 md:pt-10 pb-2 md:pb-6">
+		<section
+			id="world"
+			className="scroll-mt-6 page-frame px-2 md:px-8 pt-9 md:pt-10 pb-2 md:pb-6"
+		>
 			<p className="label absolute top-3 left-4 m-0">Page 01 — The world</p>
 			<WorldMap selected={countries} />
 		</section>
 
-		<section className="page-frame px-2 md:px-6 pt-11 pb-6">
+		<section
+			id="entries"
+			className="scroll-mt-6 page-frame px-2 md:px-6 pt-11 pb-6"
+		>
 			<p className="label absolute top-3 left-4 m-0">Page 02 — Entries</p>
 			<CountryList countries={countries} />
 		</section>
 
-		<section className="page-frame px-4 md:px-8 pt-11 pb-6">
+		<section
+			id="collections"
+			className="scroll-mt-6 page-frame px-4 md:px-8 pt-11 pb-6"
+		>
 			<p className="label absolute top-3 left-4 m-0">Page 03 — Collections</p>
 			<Collections countries={countries} />
 		</section>

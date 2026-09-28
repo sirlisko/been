@@ -283,7 +283,10 @@ const App = () => {
 				)}
 			</div>
 
-			<section className="page-frame px-2 md:px-8 pt-9 md:pt-10 pb-2 md:pb-6">
+			<section
+				id="world"
+				className="scroll-mt-6 page-frame px-2 md:px-8 pt-9 md:pt-10 pb-2 md:pb-6"
+			>
 				<div className="label absolute top-3 left-4 right-4 flex justify-between">
 					<span>Page 01 — The world</span>
 					<span className="hidden sm:inline">Tap a country to stamp it</span>
@@ -308,7 +311,10 @@ const App = () => {
 				/>
 			</div>
 
-			<section className="page-frame px-2 md:px-6 pt-11 pb-6">
+			<section
+				id="entries"
+				className="scroll-mt-6 page-frame px-2 md:px-6 pt-11 pb-6"
+			>
 				<div className="label absolute top-3 left-4 right-4 flex justify-between">
 					<span>Page 02 — Entries</span>
 					{countries.length > 0 && (
@@ -328,7 +334,10 @@ const App = () => {
 				Collections
 			</h2>
 
-			<section className="page-frame px-4 md:px-8 pt-11 pb-6">
+			<section
+				id="collections"
+				className="scroll-mt-6 page-frame px-4 md:px-8 pt-11 pb-6"
+			>
 				<p className="label absolute top-3 left-4 m-0">Page 03 — Collections</p>
 				{!loading && <Collections countries={countries} />}
 			</section>

@@ -21,7 +21,17 @@ const Page = ({ actions, children }: Props) => (
 				>
 					Been.
 				</a>
-				<span className="label hidden sm:inline">Travel record</span>
+				<nav aria-label="Sections" className="hidden sm:flex gap-4">
+					{[
+						["#world", "The world"],
+						["#entries", "Entries"],
+						["#collections", "Collections"],
+					].map(([href, label]) => (
+						<a key={href} href={href} className="label hover:text-ink">
+							{label}
+						</a>
+					))}
+				</nav>
 			</div>
 			<div className="flex items-center gap-3 md:gap-6">{actions}</div>
 		</header>

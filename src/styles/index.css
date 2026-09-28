@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 @layer base {
+	html {
+		@apply motion-safe:scroll-smooth;
+	}
+
 	body {
 		@apply m-0 p-0 font-sans antialiased bg-paper text-ink min-h-screen;
 	}
