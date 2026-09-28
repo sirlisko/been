@@ -40,7 +40,9 @@ beforeEach(() => {
 
 it("renders the header", () => {
 	render(<App />);
-	expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Been.");
+	expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+		"Where have you been?",
+	);
 });
 
 it("saves to localStorage when signed out", async () => {
@@ -63,7 +65,7 @@ it("blocks saving when the account's countries failed to load", async () => {
 	render(<App />);
 	await signIn();
 	expect(screen.getByRole("alert")).toHaveTextContent(
-		"Couldn't load your countries",
+		"Couldn't load your stamps",
 	);
 	await userEvent.type(screen.getByRole("combobox"), "italy{Enter}");
 	expect(db.addCountries).not.toHaveBeenCalled();

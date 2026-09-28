@@ -15,12 +15,15 @@ export const ALL_COUNTRY_CODES: CountryCode[] =
 
 const KNOWN_CODES = new Set<string>(ALL_COUNTRY_CODES);
 
-export function getCountryName(code: CountryCode): string {
-	return getName(code) ?? code;
-}
+const displayNames = new Intl.DisplayNames(["en"], { type: "region" });
 
-export function getFlagUrl(code: CountryCode): string {
-	return `https://flagcdn.com/w40/${code.toLowerCase()}.png`;
+// Everyday names ("United States") rather than ISO ones ("United States of America (the)")
+export function getCountryName(code: CountryCode): string {
+	try {
+		return displayNames.of(code) ?? getName(code) ?? code;
+	} catch {
+		return getName(code) ?? code;
+	}
 }
 
 export function filterCountries(
@@ -28,10 +31,10 @@ export function filterCountries(
 	search: string,
 ): CountryCode[] {
 	const term = search.toLowerCase();
-	return codes.filter(
-		(code) =>
-			code.toLowerCase().includes(term) ||
-			getCountryName(code).toLowerCase().includes(term),
+	return codes.filter((code) =>
+		[code, getCountryName(code), getName(code) ?? ""].some((name) =>
+			name.toLowerCase().includes(term),
+		),
 	);
 }
 

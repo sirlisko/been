@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import AuthModal from "./components/AuthModal";
 import CountryList from "./components/CountryList";
 import CountrySearch from "./components/CountrySearch";
-import Page, { linkButtonClass } from "./components/Page";
+import Page, { linkButtonClass, primaryButtonClass } from "./components/Page";
 import Stats from "./components/Stats";
 import WorldMap from "./components/WorldMap";
 import { addCountries, loadCountries, removeCountry } from "./lib/countriesDB";
@@ -41,6 +41,8 @@ function writeLocalCountries(codes: CountryCode[]) {
 }
 
 type Notice = { text: string; error?: boolean };
+
+const errorClass = "m-0 text-sm font-semibold text-stamp-red";
 
 const App = () => {
 	const [user, setUser] = useState<User | null>(null);
@@ -152,48 +154,57 @@ const App = () => {
 
 	return (
 		<Page
-			action={
-				supabase &&
-				(user ? (
-					<button
-						type="button"
-						onClick={() => supabase?.auth.signOut()}
-						className={linkButtonClass}
-					>
-						sign out
-					</button>
-				) : (
-					<button
-						type="button"
-						onClick={() => setShowAuth(true)}
-						className={linkButtonClass}
-					>
-						sign in to sync
-					</button>
-				))
+			actions={
+				<>
+					{countries.length > 0 && (
+						<button type="button" onClick={share} className={linkButtonClass}>
+							Share map
+						</button>
+					)}
+					{supabase &&
+						(user ? (
+							<button
+								type="button"
+								onClick={() => supabase?.auth.signOut()}
+								className={linkButtonClass}
+							>
+								Sign out
+							</button>
+						) : (
+							<button
+								type="button"
+								onClick={() => setShowAuth(true)}
+								className={primaryButtonClass}
+							>
+								Sign in<span className="hidden md:inline"> to sync</span>
+							</button>
+						))}
+				</>
 			}
 		>
 			{showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
 
-			<WorldMap
-				selected={countries}
-				highlighted={searchResults}
-				onToggle={toggleCountry}
-			/>
+			<section className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+				<h1 className="m-0 font-display font-normal text-5xl md:text-7xl leading-[0.95] tracking-tight max-w-xl">
+					Where have <em className="text-stamp-red">you</em> been?
+				</h1>
+				<Stats countries={countries} />
+			</section>
 
-			<Stats countries={countries} />
-
-			<div className="text-center text-sm px-4" aria-live="polite">
+			<div
+				aria-live="polite"
+				className="empty:hidden -my-4 flex flex-col gap-2"
+			>
 				{user && remote === "loading" && (
-					<p className="text-gray-600">Loading your countries&hellip;</p>
+					<p className="label m-0">Loading your stamps&hellip;</p>
 				)}
 				{user && remote === "failed" && (
-					<p role="alert" className="text-red-700 font-bold">
-						Couldn't load your countries.{" "}
+					<p role="alert" className={errorClass}>
+						Couldn&apos;t load your stamps, so editing is paused.{" "}
 						<button
 							type="button"
 							onClick={() => syncUser(user)}
-							className="underline"
+							className="underline underline-offset-2 font-semibold"
 						>
 							Retry
 						</button>
@@ -201,31 +212,55 @@ const App = () => {
 				)}
 				{notice && (
 					<p
-						className={`break-all ${notice.error ? "text-red-700 font-bold" : "text-gray-600"}`}
+						className={
+							notice.error ? errorClass : "m-0 text-sm text-muted break-all"
+						}
 					>
 						{notice.text}
 					</p>
 				)}
-				{countries.length > 0 && (
-					<button
-						type="button"
-						onClick={share}
-						className={`${linkButtonClass} mt-4`}
-					>
-						share my map
-					</button>
-				)}
 			</div>
 
-			<CountrySearch
-				value={search}
-				onChange={setSearch}
-				results={searchResults}
-				selected={countries}
-				onSelect={toggleCountry}
-			/>
+			<section className="page-frame px-2 md:px-8 pt-9 md:pt-10 pb-2 md:pb-6">
+				<div className="label absolute top-3 left-4 right-4 flex justify-between">
+					<span>Page 01 — The world</span>
+					<span className="hidden sm:inline">Tap a country to stamp it</span>
+				</div>
+				<WorldMap
+					selected={countries}
+					highlighted={searchResults}
+					onToggle={toggleCountry}
+				/>
+			</section>
 
-			<CountryList countries={countries} onToggle={toggleCountry} />
+			<div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+				<h2 className="m-0 font-display italic font-normal text-3xl md:text-4xl">
+					Stamps
+				</h2>
+				<CountrySearch
+					value={search}
+					onChange={setSearch}
+					results={searchResults}
+					selected={countries}
+					onSelect={toggleCountry}
+				/>
+			</div>
+
+			<section className="page-frame px-2 md:px-6 pt-11 pb-6">
+				<div className="label absolute top-3 left-4 right-4 flex justify-between">
+					<span>Page 02 — Entries</span>
+					{countries.length > 0 && (
+						<span className="hidden sm:inline">Tap a stamp to remove it</span>
+					)}
+				</div>
+				{countries.length > 0 ? (
+					<CountryList countries={countries} onToggle={toggleCountry} />
+				) : (
+					<p className="m-0 py-10 text-center font-display italic text-xl text-muted">
+						No stamps yet. Tap a country on the map, or search for one.
+					</p>
+				)}
+			</section>
 		</Page>
 	);
 };

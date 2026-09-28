@@ -16,7 +16,7 @@ describe("CountrySearch", () => {
 	it("renders the search input", () => {
 		render(<CountrySearch {...defaultProps} />);
 		expect(
-			screen.getByRole("combobox", { name: "Search countries" }),
+			screen.getByRole("combobox", { name: "Add a country" }),
 		).toBeInTheDocument();
 	});
 
@@ -83,6 +83,6 @@ describe("CountrySearch", () => {
 			/>,
 		);
 		await userEvent.click(screen.getByRole("combobox"));
-		expect(screen.getByText("visited")).toBeInTheDocument();
+		expect(screen.getByText("Stamped")).toBeInTheDocument();
 	});
 });

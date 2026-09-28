@@ -7,9 +7,9 @@ interface Props {
 }
 
 const inputClass =
-	"border-0 border-b-4 border-primary text-xl py-2 px-2 bg-transparent focus:outline-none w-full";
+	"w-full border-0 border-b-2 border-ink bg-transparent py-2 font-display text-xl text-ink placeholder:text-muted focus:outline-none focus:border-stamp-red";
 const buttonClass =
-	"bg-primary text-white py-3 px-8 uppercase font-bold tracking-widest hover:bg-orange-700 active:scale-95 transition-all disabled:opacity-50";
+	"font-mono text-[13px] uppercase tracking-wider bg-ink text-paper min-h-12 px-8 hover:bg-ink/90 disabled:opacity-50";
 
 // The App's onAuthStateChange listener handles SIGNED_IN and closes this modal.
 const AuthModal = ({ onClose }: Props) => {
@@ -48,20 +48,28 @@ const AuthModal = ({ onClose }: Props) => {
 	};
 
 	const errorMessage = error && (
-		<p role="alert" className="text-sm text-red-700 font-bold">
+		<p role="alert" className="text-sm text-stamp-red font-semibold">
 			{error}
 		</p>
 	);
 
 	return (
 		<Modal onClose={onClose}>
-			<div className="flex flex-col gap-6 pt-8">
-				<h2 className="font-luckiest-guy text-3xl text-center">Sign In</h2>
+			<div className="flex flex-col gap-6">
+				<h2 className="m-0 font-display italic font-normal text-4xl">
+					Sign In
+				</h2>
+				{step === "email" && (
+					<p className="m-0 -mt-3 text-sm text-muted">
+						We&apos;ll email you a one-time code. Your stamps sync across
+						devices.
+					</p>
+				)}
 
 				{step === "email" ? (
 					<form onSubmit={sendCode} className="flex flex-col gap-6">
 						<label className="flex flex-col gap-1">
-							<span className="sr-only">Email</span>
+							<span className="label">Email</span>
 							<input
 								type="email"
 								placeholder="Email"
@@ -79,11 +87,11 @@ const AuthModal = ({ onClose }: Props) => {
 					</form>
 				) : (
 					<form onSubmit={verifyCode} className="flex flex-col gap-6">
-						<p className="text-sm text-gray-600 text-center">
+						<p className="m-0 text-sm text-muted">
 							We sent a code to <strong>{email}</strong>
 						</p>
 						<label className="flex flex-col gap-1">
-							<span className="sr-only">Sign-in code</span>
+							<span className="label">Sign-in code</span>
 							<input
 								type="text"
 								inputMode="numeric"
@@ -107,7 +115,7 @@ const AuthModal = ({ onClose }: Props) => {
 								setCode("");
 								setError(undefined);
 							}}
-							className="text-sm text-gray-600 text-center"
+							className="label underline underline-offset-4 self-start min-h-11"
 						>
 							Use a different email
 						</button>

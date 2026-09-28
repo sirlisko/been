@@ -7,34 +7,41 @@ interface Props {
 
 const Stats = ({ countries }: Props) => {
 	const { count, territories, percentage } = countStates(countries);
+	const cells = [
+		{
+			value: (
+				<>
+					<span className="text-stamp-red">{count}</span>
+					<span className="text-xl md:text-3xl"> / {TOTAL_COUNTRIES}</span>
+				</>
+			),
+			label: "Countries",
+		},
+		{ value: `${percentage}%`, label: "Of the world" },
+		...(territories > 0
+			? [
+					{
+						value: territories,
+						label: territories === 1 ? "Territory" : "Territories",
+					},
+				]
+			: []),
+	];
 
 	return (
-		<div className="flex flex-col items-center my-8 px-4">
-			<div className="inline-flex border-4 border-primary">
-				<div className="text-center px-6 sm:px-8 py-4 bg-white">
-					<span className="font-display text-5xl sm:text-6xl text-primary block">
-						{count}
-					</span>
-					<span className="text-xs font-sans font-bold uppercase tracking-widest text-gray-600">
-						of {TOTAL_COUNTRIES} countries
-					</span>
+		<dl className="flex border-y border-ink">
+			{cells.map(({ value, label }, i) => (
+				<div
+					key={label}
+					className={`flex flex-col-reverse gap-1 py-3 md:py-4 px-3 md:px-7 first:pl-0 last:pr-0 ${i > 0 ? "border-l border-ink" : ""}`}
+				>
+					<dt className="label text-[10px] md:text-[11px]">{label}</dt>
+					<dd className="m-0 font-display text-4xl md:text-6xl leading-none">
+						{value}
+					</dd>
 				</div>
-				<div className="w-1 bg-primary" />
-				<div className="text-center px-6 sm:px-8 py-4 bg-white">
-					<span className="font-display text-5xl sm:text-6xl text-primary block">
-						{percentage}%
-					</span>
-					<span className="text-xs font-sans font-bold uppercase tracking-widest text-gray-600">
-						of the world
-					</span>
-				</div>
-			</div>
-			{territories > 0 && (
-				<p className="text-xs text-gray-600 mt-2">
-					+ {territories} {territories === 1 ? "territory" : "territories"}
-				</p>
-			)}
-		</div>
+			))}
+		</dl>
 	);
 };
 

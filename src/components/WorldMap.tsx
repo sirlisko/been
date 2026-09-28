@@ -18,9 +18,9 @@ const WorldMap = ({ selected, highlighted = [], onToggle }: Props) => {
 	const highlightedSet = new Set(highlighted);
 
 	const getFill = (code: CountryCode) => {
-		if (selectedSet.has(code)) return "#c2185b";
-		if (highlightedSet.has(code)) return "#f48fb1";
-		return "#e0e0e0";
+		if (selectedSet.has(code)) return "fill-stamp-red";
+		if (highlightedSet.has(code)) return "fill-stamp-blue";
+		return "fill-land";
 	};
 
 	const zoomTo = (next: number) => {
@@ -53,15 +53,13 @@ const WorldMap = ({ selected, highlighted = [], onToggle }: Props) => {
 							<path
 								key={id}
 								d={shape}
-								fill={getFill(code)}
-								stroke="#FFEDD5"
-								strokeWidth={0.5}
+								strokeWidth={0.75}
 								vectorEffect="non-scaling-stroke"
-								className={
+								className={`stroke-page ${getFill(code)} ${
 									onToggle
-										? "cursor-pointer transition-colors duration-200 hover:opacity-80"
-										: undefined
-								}
+										? "cursor-pointer transition-colors duration-200 hover:opacity-75"
+										: ""
+								}`}
 								onClick={onToggle && (() => onToggle(code))}
 							>
 								<title>{getCountryName(code)}</title>
@@ -70,25 +68,27 @@ const WorldMap = ({ selected, highlighted = [], onToggle }: Props) => {
 					})}
 				</svg>
 			</div>
-			<div className="absolute top-2 right-2 flex flex-col border-2 border-primary bg-white">
-				<button
-					type="button"
-					aria-label="Zoom in"
-					disabled={level === ZOOM_LEVELS.length - 1}
-					onClick={() => zoomTo(ZOOM_LEVELS[level + 1])}
-					className="w-9 h-9 text-xl font-bold text-primary disabled:opacity-30"
-				>
-					+
-				</button>
-				<button
-					type="button"
-					aria-label="Zoom out"
-					disabled={level === 0}
-					onClick={() => zoomTo(ZOOM_LEVELS[level - 1])}
-					className="w-9 h-9 text-xl font-bold text-primary border-t-2 border-primary disabled:opacity-30"
-				>
-					−
-				</button>
+			<div className="flex justify-end mt-2 md:mt-3">
+				<div className="flex border border-ink bg-paper font-mono">
+					<button
+						type="button"
+						aria-label="Zoom in"
+						disabled={level === ZOOM_LEVELS.length - 1}
+						onClick={() => zoomTo(ZOOM_LEVELS[level + 1])}
+						className="w-11 h-11 text-xl text-ink disabled:opacity-30"
+					>
+						+
+					</button>
+					<button
+						type="button"
+						aria-label="Zoom out"
+						disabled={level === 0}
+						onClick={() => zoomTo(ZOOM_LEVELS[level - 1])}
+						className="w-11 h-11 text-xl text-ink border-l border-ink disabled:opacity-30"
+					>
+						−
+					</button>
+				</div>
 			</div>
 		</div>
 	);

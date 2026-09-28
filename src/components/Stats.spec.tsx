@@ -16,7 +16,7 @@ describe("Stats", () => {
 	it("counts territories separately", () => {
 		render(<Stats countries={codes("IT", "GL", "PR")} />);
 		expect(screen.getByText("1")).toBeInTheDocument();
-		expect(screen.getByText("+ 2 territories")).toBeInTheDocument();
+		expect(screen.getByText("Territories").nextSibling).toHaveTextContent("2");
 	});
 
 	it("never exceeds 100%", () => {

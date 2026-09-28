@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { CountryCode } from "../types";
-import { getCountryName, getFlagUrl } from "../utils/countries";
+import { getCountryName } from "../utils/countries";
 
 interface Props {
 	value: string;
@@ -48,34 +48,38 @@ const CountrySearch = ({
 	};
 
 	return (
-		<div className="flex justify-center my-6 px-4">
-			<div className="relative w-full max-w-md">
+		<div className="relative w-full md:w-[420px] flex flex-col gap-1.5">
+			<label htmlFor="country-search" className="label">
+				Add a country
+			</label>
+			<div className="relative">
 				<input
+					id="country-search"
 					type="text"
 					role="combobox"
-					aria-label="Search countries"
+					autoComplete="off"
 					aria-expanded={expanded}
 					aria-controls="country-results"
 					aria-activedescendant={
 						expanded ? `country-${results[active]}` : undefined
 					}
-					placeholder="Search countries..."
+					placeholder="Start typing — e.g. Japan"
 					value={value}
 					onChange={(e) => change(e.target.value)}
 					onFocus={() => setOpen(true)}
 					onBlur={() => setOpen(false)}
 					onKeyDown={onKeyDown}
-					className="w-full px-4 py-3 border-4 border-primary rounded-none text-base font-sans focus:outline-none focus:border-secondary bg-white"
+					className="w-full py-2 border-0 border-b-2 border-ink bg-transparent font-display text-xl text-ink placeholder:text-muted focus:outline-none focus:border-stamp-red"
 				/>
 				{expanded && (
 					// biome-ignore lint/a11y/useFocusableInteractive: combobox pattern, focus stays on the input (aria-activedescendant)
 					<div
 						id="country-results"
-						// biome-ignore lint/a11y/useSemanticElements: <select> can't filter as you type or show flags
+						// biome-ignore lint/a11y/useSemanticElements: <select> can't filter as you type
 						role="listbox"
 						// keeps focus in the input so onBlur doesn't close the list before onClick
 						onMouseDown={(e) => e.preventDefault()}
-						className="absolute z-10 w-full bg-white border-4 border-primary border-t-0 max-h-60 overflow-y-auto"
+						className="absolute z-10 w-full mt-1 bg-page border border-ink shadow-[4px_4px_0_theme(colors.ink)] max-h-72 overflow-y-auto"
 					>
 						{results.map((code, i) => (
 							// biome-ignore lint/a11y/useKeyWithClickEvents lint/a11y/useFocusableInteractive: combobox option, keyboard and focus live on the input
@@ -87,20 +91,14 @@ const CountrySearch = ({
 								aria-selected={i === active}
 								onClick={() => pick(code)}
 								onMouseEnter={() => setActive(i)}
-								className={`flex items-center gap-2 px-4 py-2 cursor-pointer ${
-									i === active ? "bg-warm-bg" : ""
-								} ${selectedSet.has(code) ? "text-primary font-bold" : ""}`}
+								className={`flex items-center gap-3 px-4 min-h-11 cursor-pointer ${
+									i === active ? "bg-land" : ""
+								}`}
 							>
-								<img
-									src={getFlagUrl(code)}
-									alt=""
-									className="w-6 h-6 rounded-full object-cover flex-shrink-0"
-								/>
-								<span className="text-sm">{getCountryName(code)}</span>
+								<span className="font-mono text-xs text-muted w-6">{code}</span>
+								<span>{getCountryName(code)}</span>
 								{selectedSet.has(code) && (
-									<span className="ml-auto text-xs text-primary font-bold">
-										✓ <span className="sr-only">visited</span>
-									</span>
+									<span className="ml-auto label text-stamp-red">Stamped</span>
 								)}
 							</div>
 						))}
