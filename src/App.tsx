@@ -508,6 +508,12 @@ const App = () => {
 							className="m-0 font-display font-bold text-2xl md:text-3xl tracking-tight"
 						>
 							Your stamps
+							{countries.length > 0 && (
+								<span className="font-normal text-muted">
+									{" "}
+									&middot; {countries.length}
+								</span>
+							)}
 						</h2>
 						{countries.length > 0 && (
 							<span className="text-sm text-muted">

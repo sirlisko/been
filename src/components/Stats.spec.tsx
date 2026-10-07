@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import type { CountryCode } from "../types";
 import { UN_STATES } from "../utils/countries";
@@ -17,7 +18,20 @@ describe("Stats", () => {
 	it("counts territories separately", () => {
 		render(<Stats countries={codes("IT", "GL", "PR")} />);
 		expect(screen.getByText("country").nextSibling).toHaveTextContent("1");
-		expect(screen.getByText("territories").nextSibling).toHaveTextContent("2");
+		expect(
+			screen.getByRole("button", { name: "territories" }).closest("dt")
+				?.nextSibling,
+		).toHaveTextContent("+2");
+	});
+
+	it("explains which places are territories on request", async () => {
+		render(<Stats countries={codes("IT", "PR", "GI")} />);
+		await userEvent.click(screen.getByRole("button", { name: "territories" }));
+		expect(
+			screen.getByText(
+				"Gibraltar and Puerto Rico aren't UN member states, so they don't count toward the 195.",
+			),
+		).toBeInTheDocument();
 	});
 
 	it("never exceeds 100%", () => {
