@@ -4,7 +4,7 @@ import countriesShapes, {
 	WIDTH,
 } from "world-map-country-shapes";
 import type { CountryCode } from "../types";
-import { TOTAL_COUNTRIES, countStates, sortByName } from "../utils/countries";
+import { countStates, sortByName } from "../utils/countries";
 import type { Flags } from "../utils/flagArt";
 import { fillFor } from "../utils/mapFill";
 import {
@@ -235,23 +235,13 @@ const Poster = ({ spec, flags = {}, className }: Props) => {
 			</text>
 			<text
 				x={W - left}
-				y={titleY - titleSize * 0.38}
-				textAnchor="end"
-				fill={MUTED}
-				fontFamily={BODY}
-				fontSize={labelSize}
-			>
-				{count} {count === 1 ? "country" : "countries"}
-			</text>
-			<text
-				x={W - left}
 				y={titleY}
 				textAnchor="end"
 				fill={MUTED}
 				fontFamily={BODY}
 				fontSize={labelSize}
 			>
-				{TOTAL_COUNTRIES - count} to go
+				{count} {count === 1 ? "country" : "countries"}
 			</text>
 			{spec.subtitle && (
 				<text
