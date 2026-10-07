@@ -4,46 +4,32 @@ import countriesShapes, {
 	WIDTH,
 } from "world-map-country-shapes";
 import type { CountryCode } from "../types";
+import { TOTAL_COUNTRIES, countStates, sortByName } from "../utils/countries";
+import type { Flags } from "../utils/flagArt";
+import { fillFor } from "../utils/mapFill";
 import {
-	TOTAL_COUNTRIES,
-	countStates,
-	getCountryName,
-	getNativeName,
-	sortByName,
-} from "../utils/countries";
-import { luminance, stampColours } from "../utils/flags";
-import { type Fill, fillFor } from "../utils/mapFill";
-import { type PosterSpec, SIZES, posterCountries } from "../utils/poster";
-import { countryOutline } from "../utils/shapes";
-
-// The light airmail palette, fixed so the print never follows dark mode
-const PAPER = "#f6f7f9";
-const INK = "#23262e";
-const MUTED = "#4a5163";
-const BLUE = "#1d4e9e";
-const RED = "#d42a35";
-const PRINT_FILL: Record<Fill, string> = {
-	shared: "#2e7d5b",
-	selected: BLUE,
-	highlighted: RED,
-	land: "#dce2ea",
-};
-
-const DISPLAY =
-	'"Bricolage Grotesque", "Noto Sans", "Noto Sans JP", "Noto Sans Arabic", system-ui, sans-serif';
-const BODY = '"Instrument Sans", system-ui, sans-serif';
-
-// Stamps are 5 wide by 6 tall, like the ones in the app
-const STAMP_RATIO = 1.2;
-const TILTS = [-1.2, 0.8, 0, -0.6, 1.2];
-const COMPACT_SCRIPT = /[֐-ࣿऀ-෿က-႟ሀ-፿぀-鿿가-힯]/;
+	BORDERS,
+	type PosterSpec,
+	SIZES,
+	posterCountries,
+} from "../utils/poster";
+import {
+	BLUE,
+	BODY,
+	DISPLAY,
+	MUTED,
+	PAPER,
+	PRINT_FILL,
+	RED,
+} from "../utils/posterTheme";
+import PosterStamp, { STAMP_RATIO } from "./PosterStamp";
 
 interface Sheet {
 	cols: number;
 	width: number;
 }
 
-// The most columns' worth of the largest stamps that still fit the space
+// The largest stamps that fit the space, in as few rows as that allows
 export function layoutSheet(
 	count: number,
 	width: number,
@@ -55,149 +41,16 @@ export function layoutSheet(
 	for (let cols = 1; cols <= count; cols++) {
 		const w = Math.min(maxWidth, (width - (cols - 1) * gap) / cols);
 		const rows = Math.ceil(count / cols);
-		if (rows * w * STAMP_RATIO + (rows - 1) * gap <= height && w > best.width)
+		if (rows * w * STAMP_RATIO + (rows - 1) * gap <= height && w >= best.width)
 			best = { cols, width: w };
 	}
 	return best;
 }
 
-const PosterStamp = ({
-	code,
-	x,
-	y,
-	w,
-	faded,
-	mark,
-}: {
-	code: CountryCode;
-	x: number;
-	y: number;
-	w: number;
-	faded?: boolean;
-	mark?: string;
-}) => {
-	const h = w * STAMP_RATIO;
-	const margin = w * 0.07;
-	const { ground, figure, band } = stampColours(code);
-	const native = getNativeName(code);
-	const english = getCountryName(code);
-	const title = native?.name ?? english;
-	const outline = countryOutline(code);
-	const faceW = w - margin * 2;
-	const faceH = h - margin * 2;
-	const titleSize = Math.min(
-		faceW * (COMPACT_SCRIPT.test(title) ? 0.2 : 0.15),
-		(faceW * 0.9) / (title.length * 0.6),
-	);
-	const hole = w * 0.028;
-	const tilt =
-		TILTS[(code.charCodeAt(0) * 31 + code.charCodeAt(1) * 7) % TILTS.length];
-
-	return (
-		<g
-			transform={`translate(${x} ${y}) rotate(${tilt} ${w / 2} ${h / 2})`}
-			opacity={faded ? 0.45 : 1}
-		>
-			<rect width={w} height={h} fill="#fff" />
-			{/* Perforations: round dashes of paper colour along the edge bite into it */}
-			<rect
-				width={w}
-				height={h}
-				fill="none"
-				stroke={PAPER}
-				strokeWidth={hole * 2}
-				strokeLinecap="round"
-				strokeDasharray={`0 ${hole * 3}`}
-			/>
-			<rect
-				x={margin}
-				y={margin}
-				width={faceW}
-				height={faceH}
-				fill={ground}
-				stroke={luminance(ground) > 0.7 ? "rgba(0,0,0,0.14)" : "none"}
-				strokeWidth={w * 0.006}
-			/>
-			<text
-				x={margin + faceW * 0.07}
-				y={margin + faceW * 0.07 + titleSize}
-				fill={figure}
-				fontFamily={DISPLAY}
-				fontWeight={800}
-				fontSize={titleSize}
-				lang={native?.lang ?? "en"}
-			>
-				{title}
-			</text>
-			{outline ? (
-				<svg
-					x={margin + faceW * 0.12}
-					y={margin + faceH * 0.3}
-					width={faceW * 0.76}
-					height={faceH * 0.46}
-					viewBox={outline.viewBox}
-					aria-hidden="true"
-				>
-					<path d={outline.path} fill={figure} />
-				</svg>
-			) : (
-				<text
-					x={w / 2}
-					y={margin + faceH * 0.66}
-					textAnchor="middle"
-					fill={figure}
-					fontFamily={DISPLAY}
-					fontWeight={800}
-					fontSize={faceW * 0.32}
-				>
-					{code}
-				</text>
-			)}
-			{native && (
-				<text
-					x={w / 2}
-					y={margin + faceH * 0.88}
-					textAnchor="middle"
-					fill={figure}
-					fontFamily={BODY}
-					fontWeight={600}
-					fontSize={Math.min(
-						faceW * 0.095,
-						(faceW * 0.9) / (english.length * 0.55),
-					)}
-				>
-					{english}
-				</text>
-			)}
-			<rect
-				x={margin}
-				y={margin + faceH * 0.95}
-				width={faceW}
-				height={faceH * 0.05}
-				fill={band}
-			/>
-			{mark && (
-				<g>
-					<circle cx={w - margin} cy={margin} r={w * 0.11} fill={INK} />
-					<text
-						x={w - margin}
-						y={margin + w * 0.045}
-						textAnchor="middle"
-						fill="#fff"
-						fontFamily={BODY}
-						fontWeight={700}
-						fontSize={w * 0.13}
-					>
-						{mark}
-					</text>
-				</g>
-			)}
-		</g>
-	);
-};
-
 interface Props {
 	spec: PosterSpec;
+	// The flag artwork the shape and frame stamps need; loaded by the page
+	flags?: Flags;
 	className?: string;
 }
 
@@ -212,11 +65,29 @@ function split(a: CountryCode[], b: CountryCode[]) {
 	];
 }
 
+// `strength` of `colour` over `ground`, as a solid hex
+function mix(colour: string, ground: string, strength: number) {
+	const channel = (hex: string, i: number) =>
+		Number.parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
+	return `#${[0, 1, 2]
+		.map((i) =>
+			Math.round(
+				channel(colour, i) * strength + channel(ground, i) * (1 - strength),
+			)
+				.toString(16)
+				.padStart(2, "0"),
+		)
+		.join("")}`;
+}
+
 const initial = (name: string) => [...name.trim()][0]?.toUpperCase() ?? "";
 
-const Poster = ({ spec, className }: Props) => {
+const Poster = ({ spec, flags = {}, className }: Props) => {
 	const { width: W, height: H } = SIZES[spec.size];
-	const border = W * 0.035;
+	const { width: border, stripe, strength } = BORDERS[spec.border ?? "bold"];
+	// Mixed as solid colours rather than drawn translucent, so the printer gets exact inks
+	const red = mix(RED, PAPER, strength);
+	const blue = mix(BLUE, PAPER, strength);
 	const pad = W * 0.065;
 	const left = border + pad;
 	const inner = W - left * 2;
@@ -250,18 +121,25 @@ const Poster = ({ spec, className }: Props) => {
 	const legendHeight = together ? labelSize * 2.6 : 0;
 	const sheetBottom = H - border - pad - legendHeight;
 
-	const stamps = together
+	const stamps: {
+		code: CountryCode;
+		faded?: boolean;
+		mark?: string;
+		markFill?: string;
+	}[] = together
 		? [
 				...sortByName(both).map((code) => ({ code })),
 				...sortByName(onlyVisited).map((code) => ({
 					code,
 					faded: true,
 					mark: initial(name ?? ""),
+					markFill: PRINT_FILL.selected,
 				})),
 				...sortByName(onlyWith).map((code) => ({
 					code,
 					faded: true,
 					mark: initial(partner),
+					markFill: PRINT_FILL.highlighted,
 				})),
 			]
 		: sortByName(spec.visited).map((code) => ({ code }));
@@ -271,13 +149,37 @@ const Poster = ({ spec, className }: Props) => {
 		inner,
 		sheetBottom - sheetTop,
 		gap,
-		W * 0.17,
+		// Few stamps can afford to be big; a long list gets the standard size
+		W * (stamps.length <= 4 ? 0.24 : 0.17),
 	);
 	const rows = Math.ceil(stamps.length / sheet.cols);
 	const sheetHeight = rows * sheet.width * STAMP_RATIO + (rows - 1) * gap;
 	// Centre the sheet in the space left, so short lists don't float at the top
 	const sheetY =
 		sheetTop + Math.max(0, (sheetBottom - sheetTop - sheetHeight) / 2);
+
+	// Label widths are estimated: SVG text can't be measured before it renders
+	const swatch = labelSize * 0.9;
+	const legendY = H - border - pad;
+	let legendX = left;
+	const legend = (
+		[
+			["shared", "Both"],
+			["selected", `Only ${name}`],
+			["highlighted", `Only ${partner}`],
+		] as const
+	).map(([key, label]) => {
+		const x = legendX;
+		legendX += swatch * 1.5 + label.length * labelSize * 0.5 + labelSize * 1.6;
+		return { fill: key, label, x };
+	});
+
+	// The airmail edge: red, paper, blue, paper, at 45° across the whole sheet
+	const diagonal = W + H;
+	const stripes = Array.from(
+		{ length: Math.ceil((diagonal * 2) / (stripe * 4)) },
+		(_, i) => -diagonal + i * stripe * 4,
+	);
 
 	const fill = together
 		? fillFor({ selected: onlyVisited, highlighted: onlyWith, shared: both })
@@ -290,31 +192,28 @@ const Poster = ({ spec, className }: Props) => {
 			role="img"
 			aria-label={`Poster: ${title}`}
 		>
-			<defs>
-				<pattern
-					id="airmail"
-					width={W * 0.06}
-					height={W * 0.06}
-					patternUnits="userSpaceOnUse"
-					patternTransform="rotate(45)"
-				>
-					<rect width={W * 0.015} height={W * 0.06} fill={RED} />
-					<rect
-						x={W * 0.015}
-						width={W * 0.015}
-						height={W * 0.06}
-						fill={PAPER}
-					/>
-					<rect x={W * 0.03} width={W * 0.015} height={W * 0.06} fill={BLUE} />
-					<rect
-						x={W * 0.045}
-						width={W * 0.015}
-						height={W * 0.06}
-						fill={PAPER}
-					/>
-				</pattern>
-			</defs>
-			<rect width={W} height={H} fill="url(#airmail)" />
+			{/* Single stripes, not an SVG pattern: Chrome rasterises patterns in the PDF */}
+			<rect width={W} height={H} fill={PAPER} />
+			<g transform="rotate(45)">
+				{stripes.map((x) => (
+					<g key={x}>
+						<rect
+							x={x}
+							y={-diagonal}
+							width={stripe}
+							height={diagonal * 2}
+							fill={red}
+						/>
+						<rect
+							x={x + stripe * 2}
+							y={-diagonal}
+							width={stripe}
+							height={diagonal * 2}
+							fill={blue}
+						/>
+					</g>
+				))}
+			</g>
 			<rect
 				x={border}
 				y={border}
@@ -397,6 +296,9 @@ const Poster = ({ spec, className }: Props) => {
 					<PosterStamp
 						key={stamp.code}
 						{...stamp}
+						style={spec.style ?? "ground"}
+						paper={PAPER}
+						flag={flags[stamp.code]}
 						x={rowStart + (i % sheet.cols) * (sheet.width + gap)}
 						y={sheetY + row * (sheet.width * STAMP_RATIO + gap)}
 						w={sheet.width}
@@ -405,15 +307,26 @@ const Poster = ({ spec, className }: Props) => {
 			})}
 
 			{together && (
-				<text
-					x={left}
-					y={H - border - pad}
-					fill={MUTED}
-					fontFamily={BODY}
-					fontSize={labelSize}
-				>
-					{`Full colour: both. Faded: only ${name} (${initial(name ?? "")}) or only ${partner} (${initial(partner)}).`}
-				</text>
+				<g fontFamily={BODY} fontSize={labelSize} fill={MUTED}>
+					{legend.map(({ fill: key, label, x }) => (
+						<g key={key}>
+							<rect
+								x={x}
+								y={legendY - swatch * 0.85}
+								width={swatch}
+								height={swatch}
+								rx={swatch * 0.2}
+								fill={PRINT_FILL[key]}
+							/>
+							<text x={x + swatch * 1.5} y={legendY}>
+								{label}
+							</text>
+						</g>
+					))}
+					<text x={W - left} y={legendY} textAnchor="end">
+						Faded stamps: one of you
+					</text>
+				</g>
 			)}
 		</svg>
 	);

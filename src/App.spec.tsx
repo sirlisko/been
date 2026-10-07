@@ -224,6 +224,26 @@ it("links to printing once there's a stamp", async () => {
 	vi.unstubAllEnvs();
 });
 
+it("draws the stamps in the chosen style and remembers it", async () => {
+	vi.stubEnv("VITE_PRINT", "1");
+	const { unmount } = render(<App />);
+	await signedOut();
+	expect(
+		screen.queryByRole("radiogroup", { name: "Stamp style" }),
+	).not.toBeInTheDocument();
+	await userEvent.type(screen.getByRole("combobox"), "italy{Enter}");
+	await userEvent.click(screen.getByRole("radio", { name: "Native name" }));
+	expect(screen.getByRole("link", { name: "Print" })).toHaveAttribute(
+		"href",
+		"/print?visited=IT&style=type",
+	);
+	unmount();
+	render(<App />);
+	await signedOut();
+	expect(screen.getByRole("radio", { name: "Native name" })).toBeChecked();
+	vi.unstubAllEnvs();
+});
+
 it("remembers a manual dark mode choice", async () => {
 	render(<App />);
 	await userEvent.click(

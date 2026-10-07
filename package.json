@@ -16,6 +16,7 @@
 	"dependencies": {
 		"@supabase/supabase-js": "^2.100.0",
 		"country-list": "^2.4.1",
+		"flag-icons": "^7.5.0",
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0",
 		"stripe": "^23.0.0",

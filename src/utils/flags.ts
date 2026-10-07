@@ -296,3 +296,12 @@ export function stampColours(code: CountryCode): StampColours {
 	const band = rest.find((c) => c !== figure) ?? figure;
 	return { ground: `#${ground}`, figure: `#${figure}`, band: `#${band}` };
 }
+
+// For names and outlines on white: the flag's own colour that reads on paper,
+// in palette order so France stays blue and Japan red
+export function inkOnPaper(code: CountryCode): string {
+	const ink = (PALETTES[code] ?? FALLBACK)
+		.split(" ")
+		.find((c) => contrast(c, "ffffff") >= MIN_CONTRAST);
+	return ink ? `#${ink}` : "#23262e";
+}

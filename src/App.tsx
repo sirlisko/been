@@ -10,6 +10,7 @@ import Page, {
 	primaryButtonClass,
 	secondaryButtonClass,
 } from "./components/Page";
+import StampStylePicker from "./components/StampStylePicker";
 import Stats from "./components/Stats";
 import WorldMap from "./components/WorldMap";
 import {
@@ -27,6 +28,7 @@ import {
 	readSharedMap,
 	writeLocalCountries,
 } from "./lib/localCountries";
+import { saveStampStyle, storedStampStyle } from "./lib/stampStyle";
 import { supabase } from "./lib/supabase";
 import type { CountryCode } from "./types";
 import { completedTitles } from "./utils/collections";
@@ -35,9 +37,11 @@ import {
 	countStates,
 	filterCountries,
 	getCountryName,
+	sortByName,
 	toShareParam,
 } from "./utils/countries";
-import { printingOpen } from "./utils/poster";
+import { useFlags } from "./utils/flagArt";
+import { type StampStyle, needsFlags, printingOpen } from "./utils/poster";
 type Notice = { text: string; error?: boolean };
 type Toggled = { code: CountryCode; adding: boolean };
 
@@ -59,6 +63,8 @@ const App = () => {
 		supabase ? "loading" : "ok",
 	);
 	const [search, setSearch] = useState("");
+	const [stampStyle, setStampStyle] = useState(storedStampStyle);
+	const flags = useFlags(countries, needsFlags(stampStyle));
 	const [showAuth, setShowAuth] = useState(false);
 	const [showAccount, setShowAccount] = useState(false);
 	const [toggled, setToggled] = useState<Toggled | null>(null);
@@ -175,6 +181,11 @@ const App = () => {
 		document.addEventListener("visibilitychange", refresh);
 		return () => document.removeEventListener("visibilitychange", refresh);
 	}, [user, remote]);
+
+	const changeStampStyle = (style: StampStyle) => {
+		setStampStyle(style);
+		saveStampStyle(style);
+	};
 
 	const toggleCountry = async (code: CountryCode) => {
 		if (remote !== "ok") return;
@@ -406,7 +417,7 @@ const App = () => {
 					</div>
 					{printingOpen() && !loading && countries.length > 0 && (
 						<a
-							href={`/print?visited=${toShareParam(countries)}`}
+							href={`/print?visited=${toShareParam(countries)}${stampStyle === "ground" ? "" : `&style=${stampStyle}`}`}
 							className={`${primaryButtonClass} h-12`}
 						>
 							Print
@@ -490,15 +501,29 @@ const App = () => {
 				aria-labelledby="stamps-title"
 				className="flex flex-col gap-4"
 			>
-				<div className="flex items-baseline justify-between gap-4">
-					<h2
-						id="stamps-title"
-						className="m-0 font-display font-bold text-2xl md:text-3xl tracking-tight"
-					>
-						Your stamps
-					</h2>
+				<div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+					<div className="flex flex-col gap-1">
+						<h2
+							id="stamps-title"
+							className="m-0 font-display font-bold text-2xl md:text-3xl tracking-tight"
+						>
+							Your stamps
+						</h2>
+						{countries.length > 0 && (
+							<span className="text-sm text-muted">
+								Tap a stamp to remove it
+							</span>
+						)}
+					</div>
 					{countries.length > 0 && (
-						<span className="text-sm text-muted">Tap a stamp to remove it</span>
+						<StampStylePicker
+							compact
+							value={stampStyle}
+							onChange={changeStampStyle}
+							sample={sortByName(countries)[0]}
+							flags={flags}
+							className="w-full sm:w-auto"
+						/>
 					)}
 				</div>
 				{!loading && (
@@ -511,6 +536,8 @@ const App = () => {
 						)}
 						<CountryList
 							countries={countries}
+							style={stampStyle}
+							flags={flags}
 							onToggle={toggleCountry}
 							after={
 								<button
