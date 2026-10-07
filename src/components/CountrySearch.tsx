@@ -1,6 +1,17 @@
 import { useState } from "react";
 import type { CountryCode } from "../types";
-import { getCountryName } from "../utils/countries";
+import { getCountryName, getNativeName } from "../utils/countries";
+
+const native = (code: CountryCode) => {
+	const n = getNativeName(code);
+	return (
+		n && (
+			<span lang={n.lang} dir="auto" className="text-sm text-muted">
+				{n.name}
+			</span>
+		)
+	);
+};
 
 interface Props {
 	value: string;
@@ -48,8 +59,8 @@ const CountrySearch = ({
 	};
 
 	return (
-		<div className="relative w-full md:w-[420px] flex flex-col gap-1.5">
-			<label htmlFor="country-search" className="label">
+		<div className="relative w-full flex flex-col gap-1.5">
+			<label htmlFor="country-search" className="sr-only">
 				Add a country
 			</label>
 			<div className="relative">
@@ -63,13 +74,13 @@ const CountrySearch = ({
 					aria-activedescendant={
 						expanded ? `country-${results[active]}` : undefined
 					}
-					placeholder="Start typing — e.g. Japan"
+					placeholder="Add a country: Peru, Iceland, 日本…"
 					value={value}
 					onChange={(e) => change(e.target.value)}
 					onFocus={() => setOpen(true)}
 					onBlur={() => setOpen(false)}
 					onKeyDown={onKeyDown}
-					className="w-full py-2 border-0 border-b-2 border-ink bg-transparent font-display text-xl text-ink placeholder:text-muted focus:outline-none focus:border-stamp-red"
+					className="w-full h-12 px-3.5 rounded-lg border-[1.5px] border-line bg-page text-base text-ink placeholder:text-muted focus:outline-none focus:border-blue"
 				/>
 				{expanded && (
 					// biome-ignore lint/a11y/useFocusableInteractive: combobox pattern, focus stays on the input (aria-activedescendant)
@@ -79,7 +90,7 @@ const CountrySearch = ({
 						role="listbox"
 						// keeps focus in the input so onBlur doesn't close the list before onClick
 						onMouseDown={(e) => e.preventDefault()}
-						className="absolute z-10 w-full mt-1 bg-page border border-ink shadow-[4px_4px_0_theme(colors.ink)] max-h-72 overflow-y-auto"
+						className="absolute z-10 w-full mt-1 py-1 rounded-lg bg-page border border-line shadow-lg max-h-72 overflow-y-auto"
 					>
 						{results.map((code, i) => (
 							// biome-ignore lint/a11y/useKeyWithClickEvents lint/a11y/useFocusableInteractive: combobox option, keyboard and focus live on the input
@@ -95,10 +106,12 @@ const CountrySearch = ({
 									i === active ? "bg-land" : ""
 								}`}
 							>
-								<span className="font-mono text-xs text-muted w-6">{code}</span>
 								<span>{getCountryName(code)}</span>
+								{native(code)}
 								{selectedSet.has(code) && (
-									<span className="ml-auto label text-stamp-red">Stamped</span>
+									<span className="ml-auto text-sm font-semibold text-blue">
+										Collected
+									</span>
 								)}
 							</div>
 						))}

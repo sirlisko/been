@@ -235,13 +235,13 @@ export function progress(collection: Collection, visited: Set<string>) {
 	};
 }
 
-export function completedTitles(countries: CountryCode[]): Set<string> {
+export function completedCollections(countries: CountryCode[]): Collection[] {
 	const visited = new Set<string>(countries);
-	return new Set(
-		COLLECTIONS.filter((c) => c.codes.every((code) => visited.has(code))).map(
-			(c) => c.title,
-		),
-	);
+	return COLLECTIONS.filter((c) => c.codes.every((code) => visited.has(code)));
+}
+
+export function completedTitles(countries: CountryCode[]): Set<string> {
+	return new Set(completedCollections(countries).map((c) => c.title));
 }
 
 type Box = [minX: number, minY: number, maxX: number, maxY: number];

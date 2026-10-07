@@ -18,45 +18,45 @@ it("compares the shared map with the visitor's own stamps", () => {
 		Array.from(document.querySelectorAll("details")).find((d) =>
 			d.querySelector("summary")?.textContent?.startsWith(name),
 		);
-	expect(group("Both of you · 2")?.textContent).toMatch(/France.*Italy/);
-	expect(group("Both of you · 2")?.textContent).not.toMatch(/Spain|Japan/);
-	expect(group("Both of you · 2")?.open).toBe(false);
-	expect(group("Only them · 2")?.textContent).toMatch(/Portugal.*Spain/);
-	expect(group("Only them · 2")?.open).toBe(true);
-	expect(group("Only you · 1")?.textContent).toMatch(/Japan/);
-	expect(screen.getAllByText(/^You · \d+%$/)).not.toHaveLength(0);
-	expect(screen.getAllByText(/· You \d+\/\d+/)).not.toHaveLength(0);
+	expect(group("Both of you 2")?.textContent).toMatch(/France.*Italy/);
+	expect(group("Both of you 2")?.textContent).not.toMatch(/Spain|Japan/);
+	expect(group("Both of you 2")?.open).toBe(false);
+	expect(group("Only them 2")?.textContent).toMatch(/Portugal.*Spain/);
+	expect(group("Only them 2")?.open).toBe(true);
+	expect(group("Only you 1")?.textContent).toMatch(/Japan/);
+	expect(screen.getAllByText(/^you \d+%$/)).not.toHaveLength(0);
+	expect(screen.getAllByText(/^, you \d+$/)).not.toHaveLength(0);
 	const fill = (country: string) =>
 		Array.from(document.querySelectorAll("path"))
 			.find((p) => p.textContent === country)
 			?.getAttribute("class");
-	expect(fill("Italy")).toContain("fill-stamp-green");
-	expect(fill("Spain")).toContain("fill-stamp-red");
-	expect(fill("Japan")).toContain("fill-stamp-blue");
+	expect(fill("Italy")).toContain("fill-green");
+	expect(fill("Spain")).toContain("fill-blue");
+	expect(fill("Japan")).toContain("fill-red");
 });
 
 it("uses the sharer's name when given", () => {
 	localStorage.setItem("visitedCountries", JSON.stringify(codes("IT JP")));
 	render(<SharedMap countries={codes("IT FR")} name="Luca" />);
 	expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-		"Where Luca's been",
+		"Where Luca has been",
 	);
 	expect(document.querySelector("details[open] summary")?.textContent).toMatch(
-		/^Only Luca · 1/,
+		/^Only Luca 1/,
 	);
 });
 
 it("skips the comparison for visitors without stamps", () => {
 	render(<SharedMap countries={codes("IT FR")} />);
 	expect(screen.queryByText(/Both of you/)).toBeNull();
-	expect(screen.queryByText(/You ·/)).toBeNull();
+	expect(screen.queryByText(/^you \d+%$/)).toBeNull();
 });
 
 it("loads a /@username map from the account", async () => {
 	loadPublicMap.mockResolvedValue(["IT"]);
 	render(<ProfileMap username="ada" />);
 	expect(
-		await screen.findByRole("heading", { name: "Where ada's been" }),
+		await screen.findByRole("heading", { name: "Where ada has been" }),
 	).toBeInTheDocument();
 	expect(loadPublicMap).toHaveBeenCalledWith("ada");
 });
@@ -67,4 +67,16 @@ it("says when nobody has the username", async () => {
 	expect(
 		await screen.findByText("There's no public map at @nobody."),
 	).toBeInTheDocument();
+});
+
+it("offers to print both maps together", () => {
+	vi.stubEnv("VITE_PRINT", "1");
+	localStorage.setItem("visitedCountries", JSON.stringify(codes("IT JP")));
+	render(<SharedMap countries={codes("IT FR")} name="Luca" />);
+	const link = screen.getByRole("link", { name: "Print it together" });
+	expect(link).toHaveAttribute(
+		"href",
+		"/print?size=30x40&visited=IT.JP&with=FR.IT&partner=Luca",
+	);
+	vi.unstubAllEnvs();
 });

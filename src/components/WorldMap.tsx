@@ -2,6 +2,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import countriesShapes from "world-map-country-shapes";
 import type { CountryCode } from "../types";
 import { getCountryName } from "../utils/countries";
+import { type Fill, fillFor } from "../utils/mapFill";
 
 interface Props {
 	selected: CountryCode[];
@@ -16,6 +17,13 @@ const MIN_ZOOM = 1;
 const MAX_ZOOM = 4;
 // Mouse movement before a press counts as a drag rather than a click
 const DRAG_THRESHOLD = 4;
+
+const FILL_CLASS: Record<Fill, string> = {
+	shared: "fill-green",
+	selected: "fill-blue",
+	highlighted: "fill-red",
+	land: "fill-land",
+};
 
 const WorldMap = ({
 	selected,
@@ -32,16 +40,7 @@ const WorldMap = ({
 		null,
 	);
 	const dragged = useRef(false);
-	const selectedSet = new Set(selected);
-	const highlightedSet = new Set(highlighted);
-	const sharedSet = new Set(shared);
-
-	const getFill = (code: CountryCode) => {
-		if (sharedSet.has(code)) return "fill-stamp-green";
-		if (selectedSet.has(code)) return "fill-stamp-red";
-		if (highlightedSet.has(code)) return "fill-stamp-blue";
-		return "fill-land";
-	};
+	const getFill = fillFor({ selected, highlighted, shared });
 
 	// Zooms keeping the map point under (px, py), relative to the visible area, in place.
 	// Sizes the SVG directly so pinching doesn't wait on React renders.
@@ -179,7 +178,7 @@ const WorldMap = ({
 								d={shape}
 								strokeWidth={0.75}
 								vectorEffect="non-scaling-stroke"
-								className={`stroke-page ${getFill(code)} ${
+								className={`stroke-page ${FILL_CLASS[getFill(code)]} ${
 									onToggle
 										? "cursor-pointer transition-colors duration-200 hover:opacity-75"
 										: ""
@@ -193,10 +192,10 @@ const WorldMap = ({
 				</svg>
 			</div>
 			<div className="flex items-center gap-3 mt-2 md:mt-3">
-				<div aria-live="polite" className="label min-w-0">
+				<div aria-live="polite" className="text-sm text-muted min-w-0">
 					{status}
 				</div>
-				<div className="ml-auto flex border border-ink bg-paper font-mono">
+				<div className="ml-auto flex rounded-lg border border-line bg-page overflow-hidden">
 					<button
 						type="button"
 						aria-label="Zoom in"
@@ -211,7 +210,7 @@ const WorldMap = ({
 						aria-label="Zoom out"
 						disabled={zoom <= MIN_ZOOM}
 						onClick={() => zoomBy(0.5)}
-						className="w-11 h-11 text-xl text-ink border-l border-ink disabled:opacity-30"
+						className="w-11 h-11 text-xl text-ink border-l border-line disabled:opacity-30"
 					>
 						−
 					</button>

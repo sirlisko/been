@@ -7,16 +7,17 @@ import Stats from "./Stats";
 const codes = (...c: string[]) => c as CountryCode[];
 
 describe("Stats", () => {
-	it("shows the count and percentage of UN states", () => {
+	it("shows the count, percentage and what's left of the UN states", () => {
 		render(<Stats countries={codes("IT", "FR")} />);
-		expect(screen.getByText("2")).toBeInTheDocument();
+		expect(screen.getByText("countries").nextSibling).toHaveTextContent("2");
 		expect(screen.getByText("1.0%")).toBeInTheDocument();
+		expect(screen.getByText("to go").nextSibling).toHaveTextContent("193");
 	});
 
 	it("counts territories separately", () => {
 		render(<Stats countries={codes("IT", "GL", "PR")} />);
-		expect(screen.getByText("1")).toBeInTheDocument();
-		expect(screen.getByText("Territories").nextSibling).toHaveTextContent("2");
+		expect(screen.getByText("country").nextSibling).toHaveTextContent("1");
+		expect(screen.getByText("territories").nextSibling).toHaveTextContent("2");
 	});
 
 	it("never exceeds 100%", () => {

@@ -10,6 +10,11 @@
   port = 8888
   targetPort = 5175
 
+[[redirects]]
+  from = "/print"
+  to = "/index.html"
+  status = 200
+
 # Shared maps at /@username are rendered by the SPA
 [[redirects]]
   from = "/@*"

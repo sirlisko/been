@@ -1,6 +1,6 @@
 // Offline support: pages are network-first (fresh deploys, share previews),
 // everything else same-origin is served from cache and refreshed behind it.
-const CACHE = "been-v1";
+const CACHE = "been-v2";
 
 self.addEventListener("install", (event) => {
 	event.waitUntil(caches.open(CACHE).then((cache) => cache.add("/")));

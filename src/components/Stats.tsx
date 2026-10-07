@@ -5,42 +5,41 @@ interface Props {
 	countries: CountryCode[];
 }
 
+// dt comes first for the markup; row-reverse puts the number first on screen
+const Stat = ({
+	value,
+	label,
+	big,
+}: { value: string | number; label: string; big?: boolean }) => (
+	<div className="flex flex-row-reverse justify-end items-baseline gap-1.5">
+		<dt
+			className={
+				big ? "font-display font-bold text-xl md:text-2xl" : "text-muted"
+			}
+		>
+			{label}
+		</dt>
+		<dd
+			className={`m-0 ${big ? "font-display font-extrabold text-5xl md:text-6xl tracking-tight leading-none" : "font-semibold"}`}
+		>
+			{value}
+		</dd>
+	</div>
+);
+
 const Stats = ({ countries }: Props) => {
 	const { count, territories, percentage } = countStates(countries);
-	const cells = [
-		{
-			value: (
-				<>
-					<span className="text-stamp-red">{count}</span>
-					<span className="text-xl/none md:text-3xl/none">{` / ${TOTAL_COUNTRIES}`}</span>
-				</>
-			),
-			label: "Countries",
-		},
-		{ value: `${percentage}%`, label: "Of the world" },
-		...(territories > 0
-			? [
-					{
-						value: territories,
-						label: territories === 1 ? "Territory" : "Territories",
-					},
-				]
-			: []),
-	];
-
 	return (
-		<dl className="flex border-y border-ink">
-			{cells.map(({ value, label }, i) => (
-				<div
-					key={label}
-					className={`flex flex-col-reverse gap-1 py-3 md:py-4 px-3 md:px-7 first:pl-0 last:pr-0 ${i > 0 ? "border-l border-ink" : ""}`}
-				>
-					<dt className="label text-[10px] md:text-[11px]">{label}</dt>
-					<dd className="m-0 whitespace-nowrap font-display text-4xl md:text-6xl leading-none">
-						{value}
-					</dd>
-				</div>
-			))}
+		<dl className="m-0 flex flex-wrap items-baseline gap-x-5 gap-y-1">
+			<Stat value={count} label={count === 1 ? "country" : "countries"} big />
+			<Stat value={`${percentage}%`} label="of the world" />
+			<Stat value={TOTAL_COUNTRIES - count} label="to go" />
+			{territories > 0 && (
+				<Stat
+					value={territories}
+					label={territories === 1 ? "territory" : "territories"}
+				/>
+			)}
 		</dl>
 	);
 };

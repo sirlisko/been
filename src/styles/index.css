@@ -6,52 +6,47 @@
 
 @layer base {
 	:root {
-		--paper: 243 237 226;
-		--page: 248 244 236;
-		--ink: 31 42 68;
-		--muted: 107 100 87;
-		--line: 207 198 180;
-		--land: 226 217 198;
-		--stamp-red: 184 67 47;
-		--stamp-blue: 43 76 140;
-		--stamp-green: 47 107 79;
-		--stamp-purple: 106 62 124;
-		--ink-blend: multiply;
+		--paper: 238 241 245;
+		--page: 255 255 255;
+		--ink: 35 38 46;
+		--muted: 85 92 108;
+		--line: 214 220 229;
+		--land: 214 221 231;
+		--blue: 29 78 158;
+		--red: 212 42 53;
+		--green: 46 125 91;
 		color-scheme: light;
 	}
 
-	/* Night passport: navy paper, cream ink, stamps lifted so they read on dark.
+	/* Night mail: navy paper, light ink, inks lifted so they read on dark.
 	   Follows the system until the header toggle sets data-theme; kept in CSS
-	   (not only JS) so dark systems don't flash light before the app loads. */
+	   (not only JS) so dark systems don't flash light before the app loads.
+	   Stamps keep their flag colours: they're printed things, not UI. */
 	@media (prefers-color-scheme: dark) {
 		:root:not([data-theme="light"]) {
-			--paper: 22 28 44;
-			--page: 28 35 54;
-			--ink: 237 230 216;
-			--muted: 163 155 140;
-			--line: 58 66 88;
-			--land: 46 55 80;
-			--stamp-red: 224 115 92;
-			--stamp-blue: 127 163 230;
-			--stamp-green: 111 191 148;
-			--stamp-purple: 185 147 204;
-			--ink-blend: screen;
+			--paper: 16 23 38;
+			--page: 24 34 54;
+			--ink: 232 236 243;
+			--muted: 160 169 186;
+			--line: 46 58 82;
+			--land: 44 56 82;
+			--blue: 127 166 232;
+			--red: 240 108 115;
+			--green: 95 192 143;
 			color-scheme: dark;
 		}
 	}
 
 	:root[data-theme="dark"] {
-		--paper: 22 28 44;
-		--page: 28 35 54;
-		--ink: 237 230 216;
-		--muted: 163 155 140;
-		--line: 58 66 88;
-		--land: 46 55 80;
-		--stamp-red: 224 115 92;
-		--stamp-blue: 127 163 230;
-		--stamp-green: 111 191 148;
-		--stamp-purple: 185 147 204;
-		--ink-blend: screen;
+		--paper: 16 23 38;
+		--page: 24 34 54;
+		--ink: 232 236 243;
+		--muted: 160 169 186;
+		--line: 46 58 82;
+		--land: 44 56 82;
+		--blue: 127 166 232;
+		--red: 240 108 115;
+		--green: 95 192 143;
 		color-scheme: dark;
 	}
 
@@ -74,31 +69,54 @@
 	button {
 		@apply cursor-pointer;
 	}
+
+	:focus-visible {
+		@apply outline-2 outline-offset-2 outline-blue;
+	}
+}
+
+/* Print-ready posters (PrintPage with ?fulfil): each size prints on its own page size */
+@page poster-30x40 {
+	size: 300mm 400mm;
+	margin: 0;
+}
+
+@page poster-50x70 {
+	size: 500mm 700mm;
+	margin: 0;
+}
+
+.poster-30x40 {
+	page: poster-30x40;
+}
+
+.poster-50x70 {
+	page: poster-50x70;
 }
 
 @layer components {
-	/* Passport page: hairline border with a second rule just outside it */
-	.page-frame {
-		@apply relative bg-page border border-ink outline outline-1 outline-ink outline-offset-4;
+	/* The red and blue edge of an airmail envelope */
+	.airmail {
+		background: repeating-linear-gradient(
+			-45deg,
+			rgb(var(--red)) 0 12px,
+			rgb(var(--page)) 12px 22px,
+			rgb(var(--blue)) 22px 34px,
+			rgb(var(--page)) 34px 44px
+		);
 	}
 
-	.label {
-		@apply font-mono text-[11px] uppercase tracking-[0.18em] text-muted;
-	}
-
-	/* Uneven ink: grain mask + multiply so overlapping stamps darken like real ink
-	   (screen on dark paper, where multiply would sink them into the page) */
-	.ink {
-		mask-image: url(/ink-grain.svg);
-		mask-size: 320px;
-		mix-blend-mode: var(--ink-blend);
-	}
-
-	.stamp-frame {
-		@apply absolute inset-0;
-		border: 3px solid currentColor;
-		border-radius: inherit;
-		/* A page-coloured gap, then the thin inner rule */
-		box-shadow: inset 0 0 0 4px rgb(var(--page)), inset 0 0 0 5.5px currentColor;
+	/* A stamp's white margin with its perforated edge punched through */
+	.perforated {
+		--hole: 3.2px;
+		--step: 10px;
+		padding: calc(var(--step) * 0.7);
+		background: radial-gradient(
+				circle at calc(var(--step) / 2) calc(var(--step) / 2),
+				transparent var(--hole),
+				#fff calc(var(--hole) + 0.4px)
+			)
+			calc(var(--step) / -2) calc(var(--step) / -2) / var(--step) var(--step);
+		filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.18));
 	}
 }

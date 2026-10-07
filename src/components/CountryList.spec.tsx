@@ -2,7 +2,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { CountryCode } from "../types";
-import CountryList, { stampLook } from "./CountryList";
+import CountryList from "./CountryList";
+import { stampTilt } from "./Stamp";
 
 const us = "US" as CountryCode;
 const fr = "FR" as CountryCode;
@@ -31,14 +32,29 @@ describe("CountryList", () => {
 
 	it("is read-only without onToggle", () => {
 		render(<CountryList countries={[us]} />);
-		expect(screen.getByRole("button")).toBeDisabled();
+		expect(
+			screen.getByRole("button", { name: "United States" }),
+		).toBeDisabled();
 	});
 
-	it("gives each country the same stamp wherever it sits in the list", () => {
-		expect(stampLook(fr)).toEqual(stampLook("FR" as CountryCode));
-		const looks = ["IT", "FR", "JP", "BR", "US", "EG"].map((c) =>
-			JSON.stringify(stampLook(c as CountryCode)),
+	it("titles each stamp with the name as the country writes it", () => {
+		render(<CountryList countries={["JP" as CountryCode, fr]} />);
+		expect(screen.getByText("日本")).toHaveAttribute("lang", "ja-Jpan-JP");
+		expect(screen.getByText("Japan")).toBeInTheDocument();
+		// Same in English: no second name underneath
+		expect(screen.getAllByText("France")).toHaveLength(1);
+	});
+
+	it("ends with an extra cell when given one", () => {
+		render(<CountryList countries={[fr]} after={<span>Add a stamp</span>} />);
+		expect(screen.getAllByRole("listitem")).toHaveLength(2);
+	});
+
+	it("tilts each country the same wherever it sits in the list", () => {
+		expect(stampTilt(fr)).toBe(stampTilt("FR" as CountryCode));
+		const tilts = ["IT", "FR", "JP", "BR", "US", "EG"].map((c) =>
+			stampTilt(c as CountryCode),
 		);
-		expect(new Set(looks).size).toBeGreaterThan(1);
+		expect(new Set(tilts).size).toBeGreaterThan(1);
 	});
 });
