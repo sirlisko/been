@@ -205,10 +205,12 @@ it("sends the empty stamp slot to the search", async () => {
 });
 
 it("hides printing until the shop opens", async () => {
+	vi.stubEnv("VITE_PRINT", "0");
 	render(<App />);
 	await signedOut();
 	await userEvent.type(screen.getByRole("combobox"), "italy{Enter}");
 	expect(screen.queryByRole("link", { name: "Print" })).toBeNull();
+	vi.unstubAllEnvs();
 });
 
 it("links to printing once there's a stamp", async () => {
