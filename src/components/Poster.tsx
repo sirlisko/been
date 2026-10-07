@@ -102,11 +102,7 @@ const Poster = ({ spec, flags = {}, className }: Props) => {
 
 	const name = spec.name ?? (together ? "You" : undefined);
 	const partner = spec.partner ?? "Them";
-	const title = together
-		? `${name} & ${partner}`
-		: name
-			? `${name}’s stamps`
-			: "My stamps";
+	const title = together ? `${name} & ${partner}` : (name ?? "My stamps");
 	const titleSize = Math.min(W * 0.095, (inner * 0.72) / (title.length * 0.52));
 	const subtitleSize = W * 0.028;
 	const labelSize = W * 0.024;

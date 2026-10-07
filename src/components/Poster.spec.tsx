@@ -9,9 +9,11 @@ const fill = (code: string) =>
 
 it("prints one person's stamps under their map", () => {
 	render(
-		<Poster spec={{ size: "30x40", visited: codes("IT FR"), name: "Ada" }} />,
+		<Poster
+			spec={{ size: "30x40", visited: codes("IT FR"), name: "Ada’s travels" }}
+		/>,
 	);
-	expect(screen.getByRole("img")).toHaveAccessibleName("Poster: Ada’s stamps");
+	expect(screen.getByRole("img")).toHaveAccessibleName("Poster: Ada’s travels");
 	expect(fill("IT")).toBe("#1d4e9e");
 	expect(fill("JP")).toBe("#dce2ea");
 	expect(screen.getByText("Italia")).toBeInTheDocument();

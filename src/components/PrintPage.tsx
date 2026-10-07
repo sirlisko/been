@@ -142,15 +142,13 @@ const PrintPage = ({ spec: initial, fulfil, ordered }: Props) => {
 							<div className="flex flex-col gap-3">
 								<label className="flex flex-col gap-1.5">
 									<span className={headingClass}>
-										{together ? "Your name" : "Name on the poster"}
+										{together ? "Your name" : "Title"}
 									</span>
 									<input
 										value={name}
 										onChange={(e) => setName(e.target.value)}
 										maxLength={30}
-										placeholder={
-											together ? "You" : "Leave empty for “My stamps”"
-										}
+										placeholder={together ? "You" : "My stamps"}
 										className={inputClass}
 									/>
 								</label>
