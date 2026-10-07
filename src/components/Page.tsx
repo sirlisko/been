@@ -4,6 +4,7 @@ import { currentTheme, saveTheme } from "../lib/theme";
 interface Props {
 	actions: ReactNode;
 	children: ReactNode;
+	nav?: boolean;
 }
 
 export const linkButtonClass =
@@ -32,7 +33,7 @@ const ThemeToggle = () => {
 	);
 };
 
-const Page = ({ actions, children }: Props) => (
+const Page = ({ actions, children, nav = true }: Props) => (
 	<div className="max-w-6xl mx-auto px-4 md:px-8 pt-4 md:pt-8 pb-8 flex flex-col gap-8 md:gap-10">
 		<header className="flex flex-wrap items-center justify-between gap-x-4 pb-3 md:pb-5 border-b border-ink">
 			<a
@@ -41,24 +42,26 @@ const Page = ({ actions, children }: Props) => (
 			>
 				Been.
 			</a>
-			<nav
-				aria-label="Sections"
-				className="order-last basis-full sm:order-none sm:basis-auto sm:mr-auto flex gap-4"
-			>
-				{[
-					["#world", "The world"],
-					["#entries", "Entries"],
-					["#collections", "Collections"],
-				].map(([href, label]) => (
-					<a
-						key={href}
-						href={href}
-						className="label hover:text-ink min-h-11 inline-flex items-center"
-					>
-						{label}
-					</a>
-				))}
-			</nav>
+			{nav && (
+				<nav
+					aria-label="Sections"
+					className="order-last basis-full sm:order-none sm:basis-auto sm:mr-auto flex gap-4"
+				>
+					{[
+						["#world", "The world"],
+						["#entries", "Entries"],
+						["#collections", "Collections"],
+					].map(([href, label]) => (
+						<a
+							key={href}
+							href={href}
+							className="label hover:text-ink min-h-11 inline-flex items-center"
+						>
+							{label}
+						</a>
+					))}
+				</nav>
+			)}
 			<div className="flex items-center gap-3 md:gap-6">
 				<ThemeToggle />
 				{actions}

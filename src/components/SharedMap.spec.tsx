@@ -68,3 +68,13 @@ it("says when nobody has the username", async () => {
 		await screen.findByText("There's no public map at @nobody."),
 	).toBeInTheDocument();
 });
+
+it("offers to print both maps together", () => {
+	localStorage.setItem("visitedCountries", JSON.stringify(codes("IT JP")));
+	render(<SharedMap countries={codes("IT FR")} name="Luca" />);
+	const link = screen.getByRole("link", { name: "Print it together" });
+	expect(link).toHaveAttribute(
+		"href",
+		"/print?size=30x40&visited=IT.JP&with=FR.IT&partner=Luca",
+	);
+});

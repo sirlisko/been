@@ -76,6 +76,25 @@
 	}
 }
 
+/* Print-ready posters (PrintPage with ?fulfil): each size prints on its own page size */
+@page poster-30x40 {
+	size: 300mm 400mm;
+	margin: 0;
+}
+
+@page poster-50x70 {
+	size: 500mm 700mm;
+	margin: 0;
+}
+
+.poster-30x40 {
+	page: poster-30x40;
+}
+
+.poster-50x70 {
+	page: poster-50x70;
+}
+
 @layer components {
 	/* Passport page: hairline border with a second rule just outside it */
 	.page-frame {

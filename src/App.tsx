@@ -279,9 +279,17 @@ const App = () => {
 			actions={
 				<>
 					{!loading && countries.length > 0 && (
-						<button type="button" onClick={share} className={linkButtonClass}>
-							Share map
-						</button>
+						<>
+							<button type="button" onClick={share} className={linkButtonClass}>
+								Share map
+							</button>
+							<a
+								href={`/print?visited=${toShareParam(countries)}`}
+								className={`${linkButtonClass} inline-flex items-center`}
+							>
+								Print
+							</a>
+						</>
 					)}
 					{supabase &&
 						(user || remote !== "loading") &&

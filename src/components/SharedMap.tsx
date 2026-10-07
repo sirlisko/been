@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { loadPublicMap } from "../lib/countriesDB";
 import { readOwnCountries } from "../lib/localCountries";
 import type { CountryCode } from "../types";
+import { posterParams } from "../utils/poster";
 import Collections from "./Collections";
 import CountryList from "./CountryList";
-import Page, { primaryButtonClass } from "./Page";
+import Page, { linkButtonClass, primaryButtonClass } from "./Page";
 import Stats from "./Stats";
 import WorldMap from "./WorldMap";
 
@@ -108,13 +109,26 @@ const SharedMap = ({ countries, name }: Props) => {
 				</p>
 			)}
 			{comparing && (
-				<ul className="-mt-4 m-0 p-0 list-none flex flex-wrap gap-x-8 gap-y-2">
-					{comparing.map((g) => (
-						<li key={g.label} className="label flex items-center gap-2">
-							<GroupLabel {...g} />
-						</li>
-					))}
-				</ul>
+				<div className="-mt-4 flex flex-wrap items-center justify-between gap-x-8 gap-y-2">
+					<ul className="m-0 p-0 list-none flex flex-wrap gap-x-8 gap-y-2">
+						{comparing.map((g) => (
+							<li key={g.label} className="label flex items-center gap-2">
+								<GroupLabel {...g} />
+							</li>
+						))}
+					</ul>
+					<a
+						href={`/print?${posterParams({
+							size: "30x40",
+							visited: [...both, ...onlyMe],
+							with: countries,
+							partner: name,
+						})}`}
+						className={`${linkButtonClass} inline-flex items-center`}
+					>
+						Print it together
+					</a>
+				</div>
 			)}
 
 			<section
