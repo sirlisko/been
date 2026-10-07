@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
-import countriesShapes from "world-map-country-shapes";
+import countriesShapes, { VIEW_BOX } from "world-map-country-shapes";
 import type { CountryCode } from "../types";
 import { getCountryName } from "../utils/countries";
 import { type Fill, fillFor } from "../utils/mapFill";
@@ -163,7 +163,7 @@ const WorldMap = ({
 			>
 				<svg
 					ref={svg}
-					viewBox="0 0 2000 1001"
+					viewBox={VIEW_BOX}
 					className="h-auto block"
 					style={{ width: `${zoom * 100}%` }}
 					role="img"

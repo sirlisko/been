@@ -24,8 +24,8 @@ importers:
         specifier: ^23.0.0
         version: 23.0.0(@types/node@22.19.15)
       world-map-country-shapes:
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^2.0.0
+        version: 2.0.0
     devDependencies:
       '@biomejs/biome':
         specifier: 1.9.4
@@ -1430,8 +1430,8 @@ packages:
     engines: {node: '>=8'}
     hasBin: true
 
-  world-map-country-shapes@1.0.0:
-    resolution: {integrity: sha512-cw6AoVbJCsAfMsZ+/GMnkyrTTRO+Jg2LbvNA1GdTCjXXD6ULitZinGrcCTv11Z2LNgWaVvF6XU0GWKIF2tJlyA==}
+  world-map-country-shapes@2.0.0:
+    resolution: {integrity: sha512-mDNz+tZ6nziFKrpZ7Gx39KATlM25XyWROVMJ28cHGrLS0DDbliMlHmhq4ze7fqFCISS0d1pCmGaxZALIIUBhng==}
 
   ws@8.20.0:
     resolution: {integrity: sha512-sAt8BhgNbzCtgGbt2OxmpuryO63ZoDk/sqaB/znQm94T4fCEsy/yV+7CdC1kJhOU9lboAEU7R3kquuycDoibVA==}
@@ -2705,7 +2705,7 @@ snapshots:
       siginfo: 2.0.0
       stackback: 0.0.2
 
-  world-map-country-shapes@1.0.0: {}
+  world-map-country-shapes@2.0.0: {}
 
   ws@8.20.0: {}
 

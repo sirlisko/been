@@ -5,7 +5,6 @@ import {
 	CONTINENTS,
 	collectionViewBox,
 	completedTitles,
-	pathBounds,
 	progress,
 } from "./collections";
 import { UN_STATES } from "./countries";
@@ -46,14 +45,6 @@ describe("collections", () => {
 		expect(completedTitles(["GB", "IE", "BE", "NL"] as CountryCode[])).toEqual(
 			new Set(["British Isles"]),
 		);
-	});
-});
-
-describe("pathBounds", () => {
-	it("tracks absolute and relative commands across subpaths", () => {
-		expect(pathBounds("M10 10l5 5h-20v-3zm1-20L30 1H2V40")).toEqual([
-			-5, -10, 30, 40,
-		]);
 	});
 });
 

@@ -1,4 +1,8 @@
-import countriesShapes from "world-map-country-shapes";
+import countriesShapes, {
+	HEIGHT,
+	VIEW_BOX,
+	WIDTH,
+} from "world-map-country-shapes";
 import type { CountryCode } from "../types";
 import {
 	TOTAL_COUNTRIES,
@@ -240,7 +244,7 @@ const Poster = ({ spec, className }: Props) => {
 	const subtitleY = titleY + subtitleSize * 1.9;
 	const headerBottom = (spec.subtitle ? subtitleY : titleY) + W * 0.045;
 
-	const mapHeight = showMap ? (inner * 1001) / 2000 : 0;
+	const mapHeight = showMap ? (inner * HEIGHT) / WIDTH : 0;
 	const mapY = headerBottom;
 	const sheetTop = mapY + mapHeight + (showMap ? W * 0.04 : 0);
 	const legendHeight = together ? labelSize * 2.6 : 0;
@@ -369,7 +373,7 @@ const Poster = ({ spec, className }: Props) => {
 					y={mapY}
 					width={inner}
 					height={mapHeight}
-					viewBox="0 0 2000 1001"
+					viewBox={VIEW_BOX}
 				>
 					{countriesShapes.map(({ id, shape }) => (
 						<path
