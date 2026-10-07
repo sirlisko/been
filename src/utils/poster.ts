@@ -9,6 +9,39 @@ export const SIZES = {
 
 export type PosterSize = keyof typeof SIZES;
 
+// The stamp designs, as drawn in the redesign canvas
+export const STAMP_STYLES = {
+	ground: "Flag colours",
+	shape: "Flag in the country",
+	frame: "Flag as the frame",
+	type: "Native name",
+} as const;
+
+export type StampStyle = keyof typeof STAMP_STYLES;
+
+export const isStampStyle = (style: unknown): style is StampStyle =>
+	typeof style === "string" && Object.hasOwn(STAMP_STYLES, style);
+
+// The airmail edge around the poster, in millimetres: the same on every size,
+// so the big poster doesn't get a band twice as thick. Subtle mutes the
+// stripes towards the paper
+export const BORDERS = {
+	bold: { label: "Bold", width: 6, stripe: 3, strength: 1 },
+	subtle: { label: "Subtle", width: 6, stripe: 3, strength: 0.45 },
+} as const;
+
+export type PosterBorder = keyof typeof BORDERS;
+
+const isPosterBorder = (border: unknown): border is PosterBorder =>
+	typeof border === "string" && Object.hasOwn(BORDERS, border);
+
+const parseBorder = (border: string | null) =>
+	isPosterBorder(border) && border !== "bold" ? border : undefined;
+
+// These draw the real flag, so the page loads flag-icons' artwork for them
+export const needsFlags = (style: StampStyle | undefined) =>
+	style === "shape" || style === "frame";
+
 // Off until the shop opens; /print itself stays reachable by link
 export const printingOpen = () => import.meta.env.VITE_PRINT === "1";
 
@@ -22,6 +55,10 @@ export interface PosterSpec {
 	subtitle?: string;
 	// The world map above the stamps; on unless turned off
 	map?: boolean;
+	// Flag colours unless chosen
+	style?: StampStyle;
+	// Bold unless chosen
+	border?: PosterBorder;
 }
 
 const clean = (max: number) => (text: string | null | undefined) =>
@@ -50,6 +87,9 @@ export function parseCodes(param: string | null): CountryCode[] | null {
 	return parseShareParam(param.match(/../g)?.join(".") ?? "");
 }
 
+const parseStyle = (style: string | null) =>
+	isStampStyle(style) && style !== "ground" ? style : undefined;
+
 export function parsePosterParams(params: URLSearchParams): PosterSpec | null {
 	const visited = parseCodes(params.get("visited"));
 	if (!visited) return null;
@@ -62,6 +102,8 @@ export function parsePosterParams(params: URLSearchParams): PosterSpec | null {
 		partner: cleanName(params.get("partner")),
 		subtitle: cleanSubtitle(params.get("subtitle")),
 		map: params.get("map") !== "0",
+		style: parseStyle(params.get("style")),
+		border: parseBorder(params.get("border")),
 	};
 }
 
@@ -75,6 +117,8 @@ export function posterParams(spec: PosterSpec): URLSearchParams {
 	if (spec.partner) params.set("partner", spec.partner);
 	if (spec.subtitle) params.set("subtitle", spec.subtitle);
 	if (spec.map === false) params.set("map", "0");
+	if (spec.style && spec.style !== "ground") params.set("style", spec.style);
+	if (spec.border && spec.border !== "bold") params.set("border", spec.border);
 	return params;
 }
 
@@ -99,6 +143,8 @@ export function checkoutParams(
 	const partner = cleanName(str("partner"));
 	const subtitle = cleanSubtitle(str("subtitle"));
 	const map = str("map") !== "0";
+	const style = parseStyle(str("style"));
+	const border = parseBorder(str("border"));
 	if (together && (!together.length || !name || !partner)) return null;
 
 	const spec: PosterSpec = {
@@ -109,6 +155,8 @@ export function checkoutParams(
 		partner,
 		subtitle,
 		map,
+		style,
+		border,
 	};
 	const { label, price } = SIZES[size];
 	const back = `${origin}/print?${posterParams(spec)}`;
@@ -135,6 +183,8 @@ export function checkoutParams(
 			...(partner && { partner }),
 			...(subtitle && { subtitle }),
 			map: map ? "1" : "0",
+			style: style ?? "ground",
+			border: border ?? "bold",
 		},
 		success_url: `${back}&ordered=1`,
 		cancel_url: back,

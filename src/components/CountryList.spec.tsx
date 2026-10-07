@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { CountryCode } from "../types";
 import CountryList from "./CountryList";
-import { stampTilt } from "./Stamp";
+import { stampTilt } from "./PosterStamp";
 
 const us = "US" as CountryCode;
 const fr = "FR" as CountryCode;

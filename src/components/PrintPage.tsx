@@ -1,15 +1,22 @@
 import { useEffect, useState } from "react";
+import { useFlags } from "../utils/flagArt";
 import {
+	BORDERS,
+	type PosterBorder,
 	type PosterSize,
 	type PosterSpec,
 	SIZES,
+	type StampStyle,
 	cleanName,
 	cleanSubtitle,
 	formatPrice,
+	needsFlags,
+	posterCountries,
 	posterParams,
 } from "../utils/poster";
 import Page, { linkButtonClass, primaryButtonClass } from "./Page";
 import Poster from "./Poster";
+import StampStylePicker from "./StampStylePicker";
 
 interface Props {
 	spec: PosterSpec;
@@ -21,6 +28,8 @@ interface Props {
 const inputClass =
 	"w-full h-12 px-3.5 rounded-lg border-[1.5px] border-line bg-page text-base text-ink placeholder:text-muted focus:outline-none focus:border-blue";
 const headingClass = "font-display font-bold text-lg";
+const optionClass =
+	"flex flex-col gap-0.5 p-4 rounded-xl border-[1.5px] border-line cursor-pointer has-[:checked]:border-2 has-[:checked]:border-blue has-[:checked]:bg-blue/5 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-blue";
 
 const PrintPage = ({ spec: initial, fulfil, ordered }: Props) => {
 	const [size, setSize] = useState<PosterSize>(initial.size);
@@ -28,6 +37,8 @@ const PrintPage = ({ spec: initial, fulfil, ordered }: Props) => {
 	const [partner, setPartner] = useState(initial.partner ?? "");
 	const [subtitle, setSubtitle] = useState(initial.subtitle ?? "");
 	const [map, setMap] = useState(initial.map !== false);
+	const [style, setStyle] = useState<StampStyle>(initial.style ?? "ground");
+	const [border, setBorder] = useState<PosterBorder>(initial.border ?? "bold");
 	const [status, setStatus] = useState<"idle" | "loading" | "failed">("idle");
 	const together = Boolean(initial.with);
 	const spec: PosterSpec = {
@@ -37,7 +48,14 @@ const PrintPage = ({ spec: initial, fulfil, ordered }: Props) => {
 		partner: cleanName(partner),
 		subtitle: cleanSubtitle(subtitle),
 		map,
+		style,
+		border,
 	};
+	// The countries never change on this page, so the flags load once
+	const [countries] = useState(() => posterCountries(initial));
+	const sample = countries[0];
+	const flags = useFlags(countries, needsFlags(style));
+	const flagsReady = !needsFlags(style) || flags !== null;
 	const ready = !together || Boolean(spec.name && spec.partner);
 
 	useEffect(() => {
@@ -50,12 +68,16 @@ const PrintPage = ({ spec: initial, fulfil, ordered }: Props) => {
 				<button
 					type="button"
 					onClick={() => window.print()}
+					disabled={!flagsReady}
 					className={`${primaryButtonClass} print:hidden`}
 				>
-					Download PDF ({SIZES[size].label})
+					{flagsReady
+						? `Download PDF (${SIZES[size].label})`
+						: "Loading flags…"}
 				</button>
 				<Poster
 					spec={spec}
+					flags={flags ?? undefined}
 					className={`poster-${size} block w-full max-w-3xl h-auto print:max-w-none print:w-screen print:h-screen`}
 				/>
 			</div>
@@ -91,6 +113,7 @@ const PrintPage = ({ spec: initial, fulfil, ordered }: Props) => {
 				<div className="flex justify-center p-4 md:p-10 rounded-2xl bg-land lg:sticky lg:top-6">
 					<Poster
 						spec={spec}
+						flags={flags ?? undefined}
 						className="block w-full max-w-lg h-auto shadow-2xl"
 					/>
 				</div>
@@ -169,13 +192,53 @@ const PrintPage = ({ spec: initial, fulfil, ordered }: Props) => {
 							</div>
 
 							<fieldset className="m-0 p-0 border-0 flex flex-col gap-2">
+								<legend className={`${headingClass} mb-2`}>
+									Airmail border
+								</legend>
+								<div className="grid grid-cols-2 gap-3">
+									{(Object.keys(BORDERS) as PosterBorder[]).map((id) => (
+										<label key={id} className={optionClass}>
+											<input
+												type="radio"
+												name="border"
+												value={id}
+												checked={border === id}
+												onChange={() => setBorder(id)}
+												className="sr-only"
+											/>
+											<span
+												aria-hidden="true"
+												className="airmail block h-8 w-full rounded-sm"
+												style={{
+													padding: 5,
+													opacity: BORDERS[id].strength,
+												}}
+											>
+												<span className="block h-full bg-page" />
+											</span>
+											<span className="font-semibold">{BORDERS[id].label}</span>
+										</label>
+									))}
+								</div>
+							</fieldset>
+
+							{sample && (
+								<div className="flex flex-col gap-2">
+									<h2 className={`${headingClass} m-0`}>Stamps</h2>
+									<StampStylePicker
+										value={style}
+										onChange={setStyle}
+										sample={sample}
+										flags={flags}
+									/>
+								</div>
+							)}
+
+							<fieldset className="m-0 p-0 border-0 flex flex-col gap-2">
 								<legend className={`${headingClass} mb-2`}>Size</legend>
 								<div className="grid grid-cols-2 gap-3">
 									{(Object.keys(SIZES) as PosterSize[]).map((id) => (
-										<label
-											key={id}
-											className="flex flex-col gap-0.5 p-4 rounded-xl border-[1.5px] border-line cursor-pointer has-[:checked]:border-2 has-[:checked]:border-blue has-[:checked]:bg-blue/5 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-blue"
-										>
+										<label key={id} className={optionClass}>
 											<input
 												type="radio"
 												name="size"

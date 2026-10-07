@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { loadPublicMap } from "../lib/countriesDB";
 import { readOwnCountries } from "../lib/localCountries";
+import { storedStampStyle } from "../lib/stampStyle";
 import type { CountryCode } from "../types";
-import { posterParams, printingOpen } from "../utils/poster";
+import { useFlags } from "../utils/flagArt";
+import { needsFlags, posterParams, printingOpen } from "../utils/poster";
 import Collections from "./Collections";
 import CountryList from "./CountryList";
 import Page, { primaryButtonClass, secondaryButtonClass } from "./Page";
@@ -88,6 +90,9 @@ const SharedMap = ({ countries, name }: Props) => {
 	const [both, onlyThem, onlyMe] = comparing
 		? comparing.map((g) => g.codes)
 		: [[], countries, []];
+	// The visitor's own stamp style, as chosen on their map
+	const [style] = useState(storedStampStyle);
+	const flags = useFlags([...countries, ...onlyMe], needsFlags(style));
 
 	return (
 		<Page actions={makeYourOwn}>
@@ -126,6 +131,7 @@ const SharedMap = ({ countries, name }: Props) => {
 									visited: [...both, ...onlyMe],
 									with: countries,
 									partner: name,
+									style,
 								})}`}
 								className={primaryButtonClass}
 							>
@@ -168,14 +174,18 @@ const SharedMap = ({ countries, name }: Props) => {
 											</span>
 										</summary>
 										<div className="pb-5">
-											<CountryList countries={g.codes} />
+											<CountryList
+												countries={g.codes}
+												style={style}
+												flags={flags}
+											/>
 										</div>
 									</details>
 								),
 						)}
 					</div>
 				) : (
-					<CountryList countries={countries} />
+					<CountryList countries={countries} style={style} flags={flags} />
 				)}
 			</section>
 

@@ -105,18 +105,4 @@
 			rgb(var(--page)) 34px 44px
 		);
 	}
-
-	/* A stamp's white margin with its perforated edge punched through */
-	.perforated {
-		--hole: 3.2px;
-		--step: 10px;
-		padding: calc(var(--step) * 0.7);
-		background: radial-gradient(
-				circle at calc(var(--step) / 2) calc(var(--step) / 2),
-				transparent var(--hole),
-				#fff calc(var(--hole) + 0.4px)
-			)
-			calc(var(--step) / -2) calc(var(--step) / -2) / var(--step) var(--step);
-		filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.18));
-	}
 }

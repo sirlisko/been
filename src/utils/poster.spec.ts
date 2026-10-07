@@ -37,6 +37,8 @@ describe("checkoutParams", () => {
 			visited: "FRIT",
 			name: "Ada",
 			map: "1",
+			style: "ground",
+			border: "bold",
 		});
 		expect(params?.success_url).toBe(
 			`${origin}/print?size=50x70&visited=FR.IT&name=Ada&ordered=1`,
@@ -84,4 +86,35 @@ it("records the map choice and subtitle so fulfilment prints what was ordered", 
 		false,
 	);
 	expect(parsePosterParams(new URLSearchParams("visited=IT"))?.map).toBe(true);
+});
+
+it("records the stamp style so fulfilment prints the one that was ordered", () => {
+	const params = checkoutParams(
+		{ size: "30x40", visited: "GB.IE", style: "frame" },
+		"https://been.example",
+	);
+	expect(params?.metadata?.style).toBe("frame");
+	expect(params?.cancel_url).toMatch(/&style=frame$/);
+	expect(
+		checkoutParams({ size: "30x40", visited: "GB", style: "glitter" }, "")
+			?.metadata?.style,
+	).toBe("ground");
+	expect(
+		parsePosterParams(new URLSearchParams("visited=IT&style=type"))?.style,
+	).toBe("type");
+	expect(
+		parsePosterParams(new URLSearchParams("visited=IT&style=nope"))?.style,
+	).toBeUndefined();
+});
+
+it("records a subtle border so fulfilment prints the one that was ordered", () => {
+	const params = checkoutParams(
+		{ size: "50x70", visited: "GB", border: "subtle" },
+		"https://been.example",
+	);
+	expect(params?.metadata?.border).toBe("subtle");
+	expect(params?.cancel_url).toMatch(/&border=subtle$/);
+	expect(
+		parsePosterParams(new URLSearchParams("visited=IT&border=loud"))?.border,
+	).toBeUndefined();
 });

@@ -56,9 +56,38 @@ it("falls back to a generic title and can leave the map off", () => {
 	expect(screen.getByText("Since 2019")).toBeInTheDocument();
 });
 
+it("leaves names off stamps too small to read", () => {
+	const many = codes(
+		"AF AL DZ AD AO AR AM AU AT AZ BS BH BD BB BY BE BZ BJ BT BO BA BW BR BN BG BF BI KH CM CA CV CF TD CL CN CO KM CG CR HR CU CY CZ DK DJ DM DO EC EG SV GQ ER EE SZ ET FJ FI FR GA GM GE DE GH GR GD GT GN GW GY HT HN HU IS IN ID IR IQ IE IL IT JM JP JO KZ KE KI KW KG LA LV LB LS LR LY LI LT LU MG MW MY MV ML MT MH MR MU MX",
+	);
+	const { rerender } = render(
+		<Poster spec={{ size: "30x40", visited: many }} />,
+	);
+	expect(screen.queryByText("Italia")).not.toBeInTheDocument();
+	rerender(<Poster spec={{ size: "50x70", visited: many }} />);
+	expect(screen.getByText("Italia")).toBeInTheDocument();
+});
+
+it("draws the real flag inside the country for the shape style", () => {
+	render(
+		<Poster
+			spec={{ size: "30x40", visited: codes("IT FR"), style: "shape" }}
+			flags={{
+				["IT" as CountryCode]: {
+					viewBox: "0 0 640 480",
+					body: '<path fill="#009246"/>',
+				},
+			}}
+		/>,
+	);
+	expect(document.querySelector('path[fill="#009246"]')).toBeInTheDocument();
+	// No artwork for France: its outline is drawn in its own colour instead
+	expect(screen.getByText("France")).toBeInTheDocument();
+});
+
 describe("layoutSheet", () => {
 	it("makes few stamps big, up to the cap", () => {
-		expect(layoutSheet(2, 200, 200, 5, 50)).toEqual({ cols: 1, width: 50 });
+		expect(layoutSheet(2, 200, 200, 5, 50)).toEqual({ cols: 2, width: 50 });
 	});
 
 	it("fits every stamp in the space", () => {
