@@ -1,4 +1,5 @@
 import type { CountryCode } from "../types";
+import { migrateCodes } from "../utils/countries";
 import { supabase } from "./supabase";
 
 function db() {
@@ -9,7 +10,7 @@ function db() {
 export async function loadCountries(userId: string): Promise<CountryCode[]> {
 	const { data, error } = await db().select("code").eq("user_id", userId);
 	if (error) throw error;
-	return data.map((row) => row.code as CountryCode);
+	return migrateCodes(data.map((row) => row.code as CountryCode));
 }
 
 export async function addCountries(
@@ -77,5 +78,5 @@ export async function loadPublicMap(
 	if (!supabase) throw new Error("Supabase is not configured");
 	const { data, error } = await supabase.rpc("public_map", { name: username });
 	if (error) throw error;
-	return data;
+	return data && migrateCodes(data);
 }

@@ -7,6 +7,7 @@ import {
 	filterCountries,
 	getCountryName,
 	getNativeName,
+	migrateCodes,
 	parseShareParam,
 	toShareParam,
 } from "./countries";
@@ -105,4 +106,9 @@ describe("share param", () => {
 	it("returns null when there's no param", () => {
 		expect(parseShareParam(null)).toBeNull();
 	});
+});
+
+it("reads the Canary Islands, once their own shape, as Spain", () => {
+	expect(migrateCodes(["IC", "IT"] as CountryCode[])).toEqual(["ES", "IT"]);
+	expect(migrateCodes(["ES", "IC"] as CountryCode[])).toEqual(["ES"]);
 });

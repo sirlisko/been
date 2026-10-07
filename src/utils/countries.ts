@@ -74,6 +74,14 @@ export function countStates(codes: CountryCode[]) {
 	};
 }
 
+// The map used to draw the Canary Islands as their own shape, IC (not an ISO
+// code), so tapping them saved IC; they're part of Spain now
+export function migrateCodes(codes: CountryCode[]): CountryCode[] {
+	return [
+		...new Set(codes.map((code) => (code === "IC" ? "ES" : code))),
+	] as CountryCode[];
+}
+
 export function toShareParam(codes: CountryCode[]): string {
 	return [...codes].sort().join(".");
 }

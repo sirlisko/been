@@ -1,4 +1,5 @@
 import type { CountryCode } from "../types";
+import { migrateCodes } from "../utils/countries";
 
 const LOCAL_STORAGE_KEY = "visitedCountries";
 // Last list loaded for the signed-in account, shown on reload while it refreshes
@@ -7,7 +8,7 @@ export const ACCOUNT_CACHE_KEY = "accountCountries";
 export function readLocalCountries(key = LOCAL_STORAGE_KEY): CountryCode[] {
 	try {
 		const raw = localStorage.getItem(key);
-		return raw ? JSON.parse(raw) : [];
+		return raw ? migrateCodes(JSON.parse(raw)) : [];
 	} catch {
 		return [];
 	}
