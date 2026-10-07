@@ -5,7 +5,12 @@ import type { FlagArt } from "../utils/flagArt";
 import { inkOnPaper, luminance, stampColours } from "../utils/flags";
 import type { StampStyle } from "../utils/poster";
 import { BODY, DISPLAY, INK, MUTED } from "../utils/posterTheme";
-import { type Outline, countryOutline } from "../utils/shapes";
+import {
+	type Locator,
+	type Outline,
+	countryLocator,
+	countryOutline,
+} from "../utils/shapes";
 
 // Stamps are 5 wide by 6 tall, like the ones in the app
 export const STAMP_RATIO = 1.2;
@@ -36,6 +41,7 @@ interface Face {
 	english?: string;
 	withText: boolean;
 	outline: Outline | null;
+	locator: Locator | null;
 	flag?: FlagArt;
 	// Unique per rendered stamp, for its SVG ids
 	uid: string;
@@ -67,11 +73,59 @@ const FlagFill = ({
 	/>
 );
 
+// Borders in the stamp's ground keep a landlocked window reading as a map
+const LocatorMap = ({
+	locator,
+	box,
+	fill,
+	ground,
+}: { locator: Locator; box: Box; fill: string; ground: string }) => {
+	const { span, point } = locator;
+	return (
+		<svg
+			x={box.x}
+			y={box.y}
+			width={box.w}
+			height={box.h}
+			viewBox={locator.viewBox}
+			preserveAspectRatio="xMidYMid slice"
+			aria-hidden="true"
+		>
+			<g
+				fill={fill}
+				fillOpacity={0.35}
+				stroke={ground}
+				strokeWidth={span * 0.006}
+				strokeLinejoin="round"
+			>
+				{locator.neighbours.map(({ code, path, dx }) => (
+					<path
+						key={`${code}${dx}`}
+						d={path}
+						transform={dx ? `translate(${dx} 0)` : undefined}
+					/>
+				))}
+			</g>
+			{locator.own && <path d={locator.own} fill={fill} />}
+			<circle cx={point[0]} cy={point[1]} r={span * 0.03} fill={fill} />
+			<circle
+				cx={point[0]}
+				cy={point[1]}
+				r={span * 0.09}
+				fill="none"
+				stroke={fill}
+				strokeWidth={span * 0.018}
+			/>
+		</svg>
+	);
+};
+
 const Silhouette = ({
 	face,
 	box,
 	fill,
-}: { face: Face; box: Box; fill: string }) =>
+	ground,
+}: { face: Face; box: Box; fill: string; ground: string }) =>
 	face.outline ? (
 		<svg
 			x={box.x}
@@ -83,6 +137,8 @@ const Silhouette = ({
 		>
 			<path d={face.outline.path} fill={fill} />
 		</svg>
+	) : face.locator ? (
+		<LocatorMap locator={face.locator} box={box} fill={fill} ground={ground} />
 	) : (
 		<text
 			x={box.x + box.w / 2}
@@ -155,6 +211,7 @@ const GroundFace = ({ face }: { face: Face }) => {
 			<Silhouette
 				face={face}
 				fill={figure}
+				ground={ground}
 				box={
 					face.withText
 						? { x: w * 0.12, y: h * 0.3, w: w * 0.76, h: h * 0.46 }
@@ -233,7 +290,12 @@ const ShapeFace = ({ face }: { face: Face }) => {
 					/>
 				</svg>
 			) : (
-				<Silhouette face={face} box={box} fill={inkOnPaper(face.code)} />
+				<Silhouette
+					face={face}
+					box={box}
+					fill={inkOnPaper(face.code)}
+					ground="#fff"
+				/>
 			)}
 			{face.withText && (
 				<g fill={MUTED} fontFamily={BODY} fontWeight={600} fontSize={small}>
@@ -299,6 +361,7 @@ const FrameFace = ({ face }: { face: Face }) => {
 			<Silhouette
 				face={face}
 				fill={ink}
+				ground="#fff"
 				box={
 					face.withText
 						? {
@@ -393,7 +456,7 @@ const TypeFace = ({ face }: { face: Face }) => {
 					>
 						{face.code}
 					</text>
-					<Silhouette face={face} box={mark} fill={figure} />
+					<Silhouette face={face} box={mark} fill={figure} ground={ground} />
 					<text
 						fill={figure}
 						fontFamily={DISPLAY}
@@ -437,6 +500,7 @@ const TypeFace = ({ face }: { face: Face }) => {
 				<Silhouette
 					face={face}
 					fill={figure}
+					ground={ground}
 					box={{ x: w * 0.12, y: h * 0.14, w: w * 0.76, h: h * 0.72 }}
 				/>
 			)}
@@ -504,6 +568,7 @@ const PosterStamp = ({
 	const native = getNativeName(code);
 	const english = getCountryName(code);
 	const withText = w >= MIN_WIDTH_FOR_TEXT;
+	const outline = countryOutline(code);
 	const face: Face = {
 		code,
 		w: w - margin * 2,
@@ -512,7 +577,8 @@ const PosterStamp = ({
 		lang: native?.lang ?? "en",
 		english: native && w >= MIN_WIDTH_FOR_ENGLISH ? english : undefined,
 		withText,
-		outline: countryOutline(code),
+		outline,
+		locator: outline ? null : countryLocator(code),
 		flag,
 		uid,
 	};
