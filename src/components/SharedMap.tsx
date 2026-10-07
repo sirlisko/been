@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { loadPublicMap } from "../lib/countriesDB";
 import { readOwnCountries } from "../lib/localCountries";
 import type { CountryCode } from "../types";
-import { posterParams } from "../utils/poster";
+import { posterParams, printingOpen } from "../utils/poster";
 import Collections from "./Collections";
 import CountryList from "./CountryList";
-import Page, { linkButtonClass, primaryButtonClass } from "./Page";
+import Page, { primaryButtonClass, secondaryButtonClass } from "./Page";
 import Stats from "./Stats";
 import WorldMap from "./WorldMap";
 
@@ -30,29 +30,26 @@ function compare(countries: CountryCode[], name?: string): Group[] | null {
 		{
 			label: "Both of you",
 			codes: countries.filter((c) => mine.has(c)),
-			swatch: "bg-stamp-green",
+			swatch: "bg-green",
 		},
 		{
 			label: `Only ${name ?? "them"}`,
 			codes: onlyThem,
-			swatch: "bg-stamp-red",
+			swatch: "bg-blue",
 		},
-		{ label: "Only you", codes: onlyMe, swatch: "bg-stamp-blue" },
+		{ label: "Only you", codes: onlyMe, swatch: "bg-red" },
 	];
 }
 
 const GroupLabel = ({ label, codes, swatch }: Group) => (
 	<>
-		<span aria-hidden="true" className={`w-3 h-3 ${swatch}`} />
-		{label} · {codes.length}
+		<span aria-hidden="true" className={`size-3 rounded-sm ${swatch}`} />
+		{label} <span className="text-muted">{codes.length}</span>
 	</>
 );
 
 const makeYourOwn = (
-	<a
-		href="/"
-		className={`${primaryButtonClass} inline-flex items-center no-underline`}
-	>
+	<a href="/" className={secondaryButtonClass}>
 		Make your own
 	</a>
 );
@@ -73,7 +70,7 @@ export const ProfileMap = ({ username }: { username: string }) => {
 	if (countries) return <SharedMap countries={countries} name={username} />;
 	return (
 		<Page actions={makeYourOwn}>
-			<p className="m-0 py-10 text-center font-display italic text-xl text-muted">
+			<p className="m-0 py-10 text-center text-lg text-muted">
 				{failed
 					? "Couldn't load this map, please try again."
 					: countries === null
@@ -94,58 +91,64 @@ const SharedMap = ({ countries, name }: Props) => {
 
 	return (
 		<Page actions={makeYourOwn}>
-			<section className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-				<h1 className="m-0 font-display font-normal text-5xl md:text-7xl leading-[0.95] tracking-tight max-w-xl">
-					Where{" "}
-					<em className="text-stamp-red">{name ? `${name}'s` : "they've"}</em>{" "}
-					been
-				</h1>
-				<Stats countries={countries} />
-			</section>
-
-			{same && (
-				<p className="-mt-4 m-0 font-display italic text-xl text-muted">
-					Same stamps as yours.
-				</p>
-			)}
-			{comparing && (
-				<div className="-mt-4 flex flex-wrap items-center justify-between gap-x-8 gap-y-2">
-					<ul className="m-0 p-0 list-none flex flex-wrap gap-x-8 gap-y-2">
-						{comparing.map((g) => (
-							<li key={g.label} className="label flex items-center gap-2">
-								<GroupLabel {...g} />
-							</li>
-						))}
-					</ul>
-					<a
-						href={`/print?${posterParams({
-							size: "30x40",
-							visited: [...both, ...onlyMe],
-							with: countries,
-							partner: name,
-						})}`}
-						className={`${linkButtonClass} inline-flex items-center`}
-					>
-						Print it together
-					</a>
-				</div>
-			)}
-
 			<section
 				id="world"
-				className="scroll-mt-6 page-frame px-2 md:px-8 pt-9 md:pt-10 pb-2 md:pb-6"
+				aria-labelledby="world-title"
+				className="flex flex-col gap-4 p-3 md:p-6 rounded-2xl bg-page border border-line"
 			>
-				<p className="label absolute top-3 left-4 m-0">Page 01 — The world</p>
+				<div className="flex flex-col gap-2 px-1 md:px-0">
+					<h1
+						id="world-title"
+						className="m-0 font-display font-bold text-2xl md:text-3xl tracking-tight"
+					>
+						{name ? `Where ${name} has been` : "Where they've been"}
+					</h1>
+					<Stats countries={countries} />
+				</div>
 				<WorldMap selected={onlyThem} highlighted={onlyMe} shared={both} />
+				{same && <p className="m-0 text-muted">Same stamps as yours.</p>}
+				{comparing && (
+					<div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3">
+						<ul className="m-0 p-0 list-none flex flex-wrap gap-x-6 gap-y-2">
+							{comparing.map((g) => (
+								<li
+									key={g.label}
+									className="flex items-center gap-2 text-sm font-semibold"
+								>
+									<GroupLabel {...g} />
+								</li>
+							))}
+						</ul>
+						{printingOpen() && (
+							<a
+								href={`/print?${posterParams({
+									size: "30x40",
+									visited: [...both, ...onlyMe],
+									with: countries,
+									partner: name,
+								})}`}
+								className={primaryButtonClass}
+							>
+								Print it together
+							</a>
+						)}
+					</div>
+				)}
 			</section>
 
 			<section
-				id="entries"
-				className="scroll-mt-6 page-frame px-2 md:px-6 pt-11 pb-6"
+				id="stamps"
+				aria-labelledby="stamps-title"
+				className="flex flex-col gap-4"
 			>
-				<p className="label absolute top-3 left-4 m-0">Page 02 — Entries</p>
+				<h2
+					id="stamps-title"
+					className="m-0 font-display font-bold text-2xl md:text-3xl tracking-tight"
+				>
+					{name ? `${name}’s stamps` : "Their stamps"}
+				</h2>
 				{comparing ? (
-					<div className="flex flex-col border-t border-ink">
+					<div className="flex flex-col rounded-xl bg-page border border-line px-3 md:px-5">
 						{comparing.map(
 							(g, i) =>
 								g.codes.length > 0 && (
@@ -153,18 +156,18 @@ const SharedMap = ({ countries, name }: Props) => {
 									<details
 										key={g.label}
 										open={i === 1}
-										className="group border-b border-line"
+										className="group border-b border-line last:border-b-0"
 									>
-										<summary className="label flex items-center gap-2 min-h-12 px-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+										<summary className="flex items-center gap-2 min-h-12 font-semibold cursor-pointer list-none [&::-webkit-details-marker]:hidden">
 											<GroupLabel {...g} />
 											<span
 												aria-hidden="true"
-												className="ml-auto font-mono text-lg transition-transform group-open:rotate-45"
+												className="ml-auto text-2xl leading-none transition-transform group-open:rotate-45"
 											>
 												+
 											</span>
 										</summary>
-										<div className="pb-6">
+										<div className="pb-5">
 											<CountryList countries={g.codes} />
 										</div>
 									</details>
@@ -178,9 +181,15 @@ const SharedMap = ({ countries, name }: Props) => {
 
 			<section
 				id="collections"
-				className="scroll-mt-6 page-frame px-4 md:px-8 pt-11 pb-6"
+				aria-labelledby="collections-title"
+				className="flex flex-col gap-4"
 			>
-				<p className="label absolute top-3 left-4 m-0">Page 03 — Collections</p>
+				<h2
+					id="collections-title"
+					className="m-0 font-display font-bold text-2xl md:text-3xl tracking-tight"
+				>
+					Collections
+				</h2>
 				<Collections
 					countries={countries}
 					yours={comparing ? [...both, ...onlyMe] : undefined}

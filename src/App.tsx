@@ -5,7 +5,11 @@ import AuthModal from "./components/AuthModal";
 import Collections from "./components/Collections";
 import CountryList from "./components/CountryList";
 import CountrySearch from "./components/CountrySearch";
-import Page, { linkButtonClass, primaryButtonClass } from "./components/Page";
+import Page, {
+	linkButtonClass,
+	primaryButtonClass,
+	secondaryButtonClass,
+} from "./components/Page";
 import Stats from "./components/Stats";
 import WorldMap from "./components/WorldMap";
 import {
@@ -33,6 +37,7 @@ import {
 	getCountryName,
 	toShareParam,
 } from "./utils/countries";
+import { printingOpen } from "./utils/poster";
 type Notice = { text: string; error?: boolean };
 type Toggled = { code: CountryCode; adding: boolean };
 
@@ -41,7 +46,7 @@ const NUDGE_KEY = "signInNudgeDismissed";
 const NUDGE_AFTER = 10;
 const TOAST_MS = 5000;
 const SIGNED_OUT = "Signed out. Your countries are saved to your account.";
-const errorClass = "m-0 text-sm font-semibold text-stamp-red";
+const errorClass = "m-0 text-sm font-semibold text-red";
 
 const App = () => {
 	const [user, setUser] = useState<User | null>(null);
@@ -274,22 +279,16 @@ const App = () => {
 		[search],
 	);
 
+	const focusSearch = () => document.getElementById("country-search")?.focus();
+
 	return (
 		<Page
 			actions={
 				<>
 					{!loading && countries.length > 0 && (
-						<>
-							<button type="button" onClick={share} className={linkButtonClass}>
-								Share map
-							</button>
-							<a
-								href={`/print?visited=${toShareParam(countries)}`}
-								className={`${linkButtonClass} inline-flex items-center`}
-							>
-								Print
-							</a>
-						</>
+						<button type="button" onClick={share} className={linkButtonClass}>
+							Share map
+						</button>
 					)}
 					{supabase &&
 						(user || remote !== "loading") &&
@@ -305,7 +304,7 @@ const App = () => {
 							<button
 								type="button"
 								onClick={() => setShowAuth(true)}
-								className={primaryButtonClass}
+								className={secondaryButtonClass}
 							>
 								Sign in<span className="hidden md:inline"> to sync</span>
 							</button>
@@ -330,39 +329,89 @@ const App = () => {
 				className="empty:hidden fixed z-20 inset-x-4 bottom-4 sm:left-auto sm:right-6 sm:bottom-6 sm:w-96"
 			>
 				{justCompleted && (
-					<div className="flex flex-col gap-3 p-5 bg-ink text-paper shadow-[6px_6px_0_theme(colors.stamp.red)]">
-						<span className="font-mono text-[11px] uppercase tracking-[0.18em] text-paper/70">
-							Collection complete
-						</span>
-						<p className="m-0 font-display text-2xl leading-tight">
-							<em>{justCompleted}</em> — every country stamped.
-						</p>
-						<div className="flex items-center gap-2">
-							<button
-								type="button"
-								onClick={share}
-								className="font-mono text-xs uppercase tracking-wider min-h-11 px-4 bg-paper text-ink hover:bg-paper/90"
-							>
-								Share map
-							</button>
-							<button
-								type="button"
-								onClick={() => setJustCompleted(null)}
-								className="font-mono text-xs uppercase tracking-wider min-h-11 px-3 underline underline-offset-4"
-							>
-								Dismiss
-							</button>
+					<div className="airmail p-2 rounded-xl shadow-xl">
+						<div className="flex flex-col gap-3 p-5 rounded-lg bg-page">
+							<p className="m-0 font-display font-bold text-2xl leading-tight">
+								{justCompleted}: complete
+							</p>
+							<p className="m-0 text-muted">
+								Every country in the set is collected.
+							</p>
+							<div className="flex items-center gap-2">
+								<button
+									type="button"
+									onClick={share}
+									className={secondaryButtonClass}
+								>
+									Share map
+								</button>
+								<button
+									type="button"
+									onClick={() => setJustCompleted(null)}
+									className={linkButtonClass}
+								>
+									Dismiss
+								</button>
+							</div>
 						</div>
 					</div>
 				)}
 			</div>
 
-			<section className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-				<h1 className="m-0 font-display font-normal text-5xl md:text-7xl leading-[0.95] tracking-tight max-w-xl">
-					Where have <em className="text-stamp-red">you</em> been?
-				</h1>
-				<div className={loading ? "invisible" : undefined}>
-					<Stats countries={countries} />
+			<section
+				id="world"
+				aria-labelledby="world-title"
+				className="flex flex-col gap-4 p-3 md:p-6 rounded-2xl bg-page border border-line"
+			>
+				<div className="flex flex-col gap-2 px-1 md:px-0">
+					<h1
+						id="world-title"
+						className="m-0 font-display font-bold text-2xl md:text-3xl tracking-tight"
+					>
+						Where have you been?
+					</h1>
+					<div className={loading ? "invisible" : undefined}>
+						<Stats countries={countries} />
+					</div>
+				</div>
+				<WorldMap
+					selected={countries}
+					highlighted={searchResults}
+					onToggle={toggleCountry}
+					status={
+						toggled && (
+							<>
+								{toggled.adding ? "Added" : "Removed"}{" "}
+								{getCountryName(toggled.code)}.{" "}
+								<button
+									type="button"
+									onClick={undo}
+									className="min-h-11 font-semibold text-blue underline underline-offset-4"
+								>
+									Undo
+								</button>
+							</>
+						)
+					}
+				/>
+				<div className="flex gap-2 md:gap-3 items-start">
+					<div className="flex-1 min-w-0">
+						<CountrySearch
+							value={search}
+							onChange={setSearch}
+							results={searchResults}
+							selected={countries}
+							onSelect={toggleCountry}
+						/>
+					</div>
+					{printingOpen() && !loading && countries.length > 0 && (
+						<a
+							href={`/print?visited=${toShareParam(countries)}`}
+							className={`${primaryButtonClass} h-12`}
+						>
+							Print
+						</a>
+					)}
 				</div>
 			</section>
 
@@ -371,7 +420,7 @@ const App = () => {
 				className="empty:hidden -my-4 flex flex-col gap-2"
 			>
 				{user && loading && (
-					<p className="label m-0">Loading your stamps&hellip;</p>
+					<p className="m-0 text-muted">Loading your stamps&hellip;</p>
 				)}
 				{user && remote === "failed" && (
 					<p role="alert" className={errorClass}>
@@ -390,16 +439,15 @@ const App = () => {
 					remote === "ok" &&
 					!nudgeDismissed &&
 					countries.length >= NUDGE_AFTER && (
-						<p className="m-0 text-sm text-muted">
-							Your stamps are only saved in this browser.{" "}
+						<p className="m-0 text-sm text-muted flex flex-wrap gap-x-3">
+							<span>Your stamps are only saved in this browser.</span>
 							<button
 								type="button"
 								onClick={() => setShowAuth(true)}
 								className="underline underline-offset-2 font-semibold text-ink"
 							>
 								Sign in to keep them
-							</button>{" "}
-							·{" "}
+							</button>
 							<button
 								type="button"
 								onClick={dismissNudge}
@@ -410,14 +458,13 @@ const App = () => {
 						</p>
 					)}
 				{sharedMap && (
-					<p className="m-0 text-sm text-muted">
+					<p className="m-0 text-sm text-muted flex flex-wrap gap-x-3">
 						<a
 							href={sharedMap}
 							className="underline underline-offset-2 font-semibold text-ink"
 						>
 							Compare with the map you were sent
-						</a>{" "}
-						·{" "}
+						</a>
 						<button
 							type="button"
 							onClick={forgetShared}
@@ -439,72 +486,63 @@ const App = () => {
 			</div>
 
 			<section
-				id="world"
-				className="scroll-mt-6 page-frame px-2 md:px-8 pt-9 md:pt-10 pb-2 md:pb-6"
+				id="stamps"
+				aria-labelledby="stamps-title"
+				className="flex flex-col gap-4"
 			>
-				<div className="label absolute top-3 left-4 right-4 flex justify-between">
-					<span>Page 01 — The world</span>
-					<span className="hidden sm:inline">Tap a country to stamp it</span>
-				</div>
-				<WorldMap
-					selected={countries}
-					highlighted={searchResults}
-					onToggle={toggleCountry}
-					status={
-						toggled && (
-							<>
-								{toggled.adding ? "Stamped" : "Removed"}{" "}
-								{getCountryName(toggled.code)} ·{" "}
-								<button
-									type="button"
-									onClick={undo}
-									className="min-h-11 uppercase underline underline-offset-4 text-ink"
-								>
-									Undo
-								</button>
-							</>
-						)
-					}
-				/>
-			</section>
-
-			<div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-				<h2 className="m-0 font-display italic font-normal text-3xl md:text-4xl">
-					Stamps
-				</h2>
-				<CountrySearch
-					value={search}
-					onChange={setSearch}
-					results={searchResults}
-					selected={countries}
-					onSelect={toggleCountry}
-				/>
-			</div>
-
-			<section
-				id="entries"
-				className="scroll-mt-6 page-frame px-2 md:px-6 pt-11 pb-6"
-			>
-				<div className="label absolute top-3 left-4 right-4 flex justify-between">
-					<span>Page 02 — Entries</span>
+				<div className="flex items-baseline justify-between gap-4">
+					<h2
+						id="stamps-title"
+						className="m-0 font-display font-bold text-2xl md:text-3xl tracking-tight"
+					>
+						Your stamps
+					</h2>
 					{countries.length > 0 && (
-						<span className="hidden sm:inline">Tap a stamp to remove it</span>
+						<span className="text-sm text-muted">Tap a stamp to remove it</span>
 					)}
 				</div>
-				{loading ? null : countries.length > 0 ? (
-					<CountryList countries={countries} onToggle={toggleCountry} />
-				) : (
-					<p className="m-0 py-10 text-center font-display italic text-xl text-muted">
-						No stamps yet. Tap a country on the map, or search for one.
-					</p>
+				{!loading && (
+					<>
+						{countries.length === 0 && (
+							<p className="m-0 text-muted">
+								Tap a country on the map, or search for it, to collect its
+								stamp.
+							</p>
+						)}
+						<CountryList
+							countries={countries}
+							onToggle={toggleCountry}
+							after={
+								<button
+									type="button"
+									onClick={focusSearch}
+									className="w-full aspect-[5/6] flex flex-col items-center justify-center gap-1 rounded-md border-2 border-dashed border-muted/50 bg-transparent text-muted font-semibold hover:border-blue hover:text-blue"
+								>
+									<span
+										aria-hidden="true"
+										className="font-display text-3xl leading-none"
+									>
+										+
+									</span>
+									Add a stamp
+								</button>
+							}
+						/>
+					</>
 				)}
 			</section>
 
 			<section
 				id="collections"
-				className="scroll-mt-6 page-frame px-4 md:px-8 pt-11 pb-6"
+				aria-labelledby="collections-title"
+				className="flex flex-col gap-4"
 			>
-				<p className="label absolute top-3 left-4 m-0">Page 03 — Collections</p>
+				<h2
+					id="collections-title"
+					className="m-0 font-display font-bold text-2xl md:text-3xl tracking-tight"
+				>
+					Collections
+				</h2>
 				{!loading && <Collections countries={countries} />}
 			</section>
 		</Page>

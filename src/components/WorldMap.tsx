@@ -19,9 +19,9 @@ const MAX_ZOOM = 4;
 const DRAG_THRESHOLD = 4;
 
 const FILL_CLASS: Record<Fill, string> = {
-	shared: "fill-stamp-green",
-	selected: "fill-stamp-red",
-	highlighted: "fill-stamp-blue",
+	shared: "fill-green",
+	selected: "fill-blue",
+	highlighted: "fill-red",
 	land: "fill-land",
 };
 
@@ -192,10 +192,10 @@ const WorldMap = ({
 				</svg>
 			</div>
 			<div className="flex items-center gap-3 mt-2 md:mt-3">
-				<div aria-live="polite" className="label min-w-0">
+				<div aria-live="polite" className="text-sm text-muted min-w-0">
 					{status}
 				</div>
-				<div className="ml-auto flex border border-ink bg-paper font-mono">
+				<div className="ml-auto flex rounded-lg border border-line bg-page overflow-hidden">
 					<button
 						type="button"
 						aria-label="Zoom in"
@@ -210,7 +210,7 @@ const WorldMap = ({
 						aria-label="Zoom out"
 						disabled={zoom <= MIN_ZOOM}
 						onClick={() => zoomBy(0.5)}
-						className="w-11 h-11 text-xl text-ink border-l border-ink disabled:opacity-30"
+						className="w-11 h-11 text-xl text-ink border-l border-line disabled:opacity-30"
 					>
 						−
 					</button>

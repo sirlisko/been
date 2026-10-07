@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { completedCollections } from "../utils/collections";
 import {
 	type PosterSize,
 	type PosterSpec,
@@ -7,7 +6,6 @@ import {
 	cleanName,
 	cleanSubtitle,
 	formatPrice,
-	posterCountries,
 	posterParams,
 } from "../utils/poster";
 import Page, { linkButtonClass, primaryButtonClass } from "./Page";
@@ -21,16 +19,15 @@ interface Props {
 }
 
 const inputClass =
-	"w-full border-0 border-b-2 border-ink bg-transparent py-2 font-display text-xl text-ink placeholder:text-muted focus:outline-none focus:border-stamp-red";
+	"w-full h-12 px-3.5 rounded-lg border-[1.5px] border-line bg-page text-base text-ink placeholder:text-muted focus:outline-none focus:border-blue";
+const headingClass = "font-display font-bold text-lg";
 
 const PrintPage = ({ spec: initial, fulfil, ordered }: Props) => {
 	const [size, setSize] = useState<PosterSize>(initial.size);
 	const [name, setName] = useState(initial.name ?? "");
 	const [partner, setPartner] = useState(initial.partner ?? "");
 	const [subtitle, setSubtitle] = useState(initial.subtitle ?? "");
-	const earned = completedCollections(posterCountries(initial)).length;
-	// On by default when there are any: they're what makes the poster yours
-	const [stamps, setStamps] = useState(initial.stamps ?? earned > 0);
+	const [map, setMap] = useState(initial.map !== false);
 	const [status, setStatus] = useState<"idle" | "loading" | "failed">("idle");
 	const together = Boolean(initial.with);
 	const spec: PosterSpec = {
@@ -39,12 +36,12 @@ const PrintPage = ({ spec: initial, fulfil, ordered }: Props) => {
 		name: cleanName(name),
 		partner: cleanName(partner),
 		subtitle: cleanSubtitle(subtitle),
-		stamps: stamps && earned > 0,
+		map,
 	};
 	const ready = !together || Boolean(spec.name && spec.partner);
 
 	useEffect(() => {
-		document.title = "Been — Print your map";
+		document.title = "Been — Print your stamps";
 	}, []);
 
 	if (fulfil) {
@@ -84,52 +81,100 @@ const PrintPage = ({ spec: initial, fulfil, ordered }: Props) => {
 
 	return (
 		<Page
-			nav={false}
 			actions={
-				<a href="/" className={`${linkButtonClass} inline-flex items-center`}>
+				<a href="/" className={linkButtonClass}>
 					Back to your map
 				</a>
 			}
 		>
-			<div className="grid lg:grid-cols-[3fr_2fr] gap-8 lg:gap-12 items-start">
-				<Poster
-					spec={spec}
-					className="block w-full max-w-xl mx-auto h-auto shadow-[6px_6px_0_rgb(var(--ink))]"
-				/>
+			<div className="grid lg:grid-cols-[3fr_2fr] gap-6 lg:gap-10 items-start">
+				<div className="flex justify-center p-4 md:p-10 rounded-2xl bg-land lg:sticky lg:top-6">
+					<Poster
+						spec={spec}
+						className="block w-full max-w-lg h-auto shadow-2xl"
+					/>
+				</div>
 
-				<section className="flex flex-col gap-6">
-					<h1 className="m-0 font-display font-normal text-5xl md:text-6xl leading-[0.95] tracking-tight">
-						{together ? (
-							<>
-								Your map, <em className="text-stamp-red">together</em>
-							</>
-						) : (
-							<>
-								Put it on the <em className="text-stamp-red">wall</em>
-							</>
+				<section className="flex flex-col gap-6 p-5 md:p-7 rounded-2xl bg-page border border-line">
+					<div className="flex flex-col gap-2">
+						<h1 className="m-0 font-display font-bold text-3xl md:text-4xl tracking-tight">
+							{together ? "Print your stamps together" : "Print your stamps"}
+						</h1>
+						{!ordered && (
+							<p className="m-0 text-muted">
+								{together
+									? "Both your maps on one sheet: full colour where you've both been, faded where only one of you has."
+									: "Every country you've collected, as a sheet of stamps printed to order and posted to you."}
+							</p>
 						)}
-					</h1>
+					</div>
 
 					{ordered ? (
-						<p className="m-0 font-display text-2xl leading-snug">
+						<p className="m-0 text-lg leading-snug">
 							Thank you! Your poster is going to the printer. The receipt is on
 							its way to your inbox.
 						</p>
 					) : (
 						<>
-							<p className="m-0 text-lg text-muted">
-								{together
-									? "Both your maps on one poster: where you've been together, and where only one of you has."
-									: "Your stamps as a poster, printed to order and posted to you."}
-							</p>
+							<div className="flex flex-col gap-3">
+								<label className="flex flex-col gap-1.5">
+									<span className={headingClass}>
+										{together ? "Your name" : "Name on the poster"}
+									</span>
+									<input
+										value={name}
+										onChange={(e) => setName(e.target.value)}
+										maxLength={30}
+										placeholder={
+											together ? "You" : "Leave empty for “My stamps”"
+										}
+										className={inputClass}
+									/>
+								</label>
+								{together && (
+									<label className="flex flex-col gap-1.5">
+										<span className={headingClass}>Their name</span>
+										<input
+											value={partner}
+											onChange={(e) => setPartner(e.target.value)}
+											maxLength={30}
+											placeholder="Them"
+											className={inputClass}
+										/>
+									</label>
+								)}
+								<label className="flex flex-col gap-1.5">
+									<span className={headingClass}>Subtitle</span>
+									<input
+										value={subtitle}
+										onChange={(e) => setSubtitle(e.target.value)}
+										maxLength={50}
+										placeholder={
+											together
+												? "Together since 2019"
+												: "Twelve years of wandering"
+										}
+										className={inputClass}
+									/>
+								</label>
+								<label className="flex items-center gap-3 min-h-11 cursor-pointer">
+									<input
+										type="checkbox"
+										checked={map}
+										onChange={(e) => setMap(e.target.checked)}
+										className="size-5 accent-[rgb(var(--blue))]"
+									/>
+									Include the world map
+								</label>
+							</div>
 
 							<fieldset className="m-0 p-0 border-0 flex flex-col gap-2">
-								<legend className="label mb-2">Size</legend>
-								<div className="flex gap-3">
+								<legend className={`${headingClass} mb-2`}>Size</legend>
+								<div className="grid grid-cols-2 gap-3">
 									{(Object.keys(SIZES) as PosterSize[]).map((id) => (
 										<label
 											key={id}
-											className="flex-1 flex flex-col gap-1 p-4 border border-ink cursor-pointer has-[:checked]:bg-ink has-[:checked]:text-paper has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-stamp-red"
+											className="flex flex-col gap-0.5 p-4 rounded-xl border-[1.5px] border-line cursor-pointer has-[:checked]:border-2 has-[:checked]:border-blue has-[:checked]:bg-blue/5 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-blue"
 										>
 											<input
 												type="radio"
@@ -139,10 +184,8 @@ const PrintPage = ({ spec: initial, fulfil, ordered }: Props) => {
 												onChange={() => setSize(id)}
 												className="sr-only"
 											/>
-											<span className="font-display text-xl">
-												{SIZES[id].label}
-											</span>
-											<span className="font-mono text-sm">
+											<span className="font-semibold">{SIZES[id].label}</span>
+											<span className="text-sm text-muted">
 												{formatPrice(SIZES[id].price)}
 											</span>
 										</label>
@@ -150,75 +193,16 @@ const PrintPage = ({ spec: initial, fulfil, ordered }: Props) => {
 								</div>
 							</fieldset>
 
-							<label className="flex flex-col gap-1">
-								<span className="label">
-									{together ? "Your name" : "Name on the poster (optional)"}
-								</span>
-								<input
-									value={name}
-									onChange={(e) => setName(e.target.value)}
-									maxLength={30}
-									placeholder={together ? "You" : "Where I've been"}
-									className={inputClass}
-								/>
-							</label>
-							{together && (
-								<label className="flex flex-col gap-1">
-									<span className="label">Their name</span>
-									<input
-										value={partner}
-										onChange={(e) => setPartner(e.target.value)}
-										maxLength={30}
-										placeholder="Them"
-										className={inputClass}
-									/>
-								</label>
-							)}
-							<label className="flex flex-col gap-1">
-								<span className="label">Subtitle (optional)</span>
-								<input
-									value={subtitle}
-									onChange={(e) => setSubtitle(e.target.value)}
-									maxLength={50}
-									placeholder={
-										together
-											? "Together since 2019"
-											: "Twelve years of wandering"
-									}
-									className={inputClass}
-								/>
-							</label>
-
-							<label className="flex items-start gap-3 cursor-pointer">
-								<input
-									type="checkbox"
-									checked={stamps && earned > 0}
-									disabled={earned === 0}
-									onChange={(e) => setStamps(e.target.checked)}
-									className="mt-1 size-5 accent-[rgb(var(--ink))]"
-								/>
-								<span className="flex flex-col gap-0.5">
-									<span className="font-display text-xl">
-										Add {together ? "your shared" : "your"} stamps
-									</span>
-									<span className="text-sm text-muted">
-										{earned === 0
-											? "Complete a collection, like a river or an island group, to earn stamps."
-											: `${earned} ${earned === 1 ? "stamp" : "stamps"} from completed collections, inked under the map.`}
-									</span>
-								</span>
-							</label>
-
 							<div className="flex flex-col gap-2">
 								<button
 									type="button"
 									onClick={order}
 									disabled={!ready || status === "loading"}
-									className={`${primaryButtonClass} self-start`}
+									className={`${primaryButtonClass} min-h-12 text-lg`}
 								>
 									{status === "loading"
 										? "Opening checkout…"
-										: `Order print – ${formatPrice(SIZES[size].price)}`}
+										: `Order for ${formatPrice(SIZES[size].price)}`}
 								</button>
 								{!ready && (
 									<p className="m-0 text-sm text-muted">
@@ -228,7 +212,7 @@ const PrintPage = ({ spec: initial, fulfil, ordered }: Props) => {
 								{status === "failed" && (
 									<p
 										role="alert"
-										className="m-0 text-sm text-stamp-red font-semibold"
+										className="m-0 text-sm text-red font-semibold"
 									>
 										Couldn't open checkout, please try again.
 									</p>

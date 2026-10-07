@@ -83,6 +83,6 @@ describe("CountrySearch", () => {
 			/>,
 		);
 		await userEvent.click(screen.getByRole("combobox"));
-		expect(screen.getByText("Stamped")).toBeInTheDocument();
+		expect(screen.getByText("Collected")).toBeInTheDocument();
 	});
 });

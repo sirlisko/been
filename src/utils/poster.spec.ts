@@ -36,10 +36,10 @@ describe("checkoutParams", () => {
 			size: "50x70",
 			visited: "FRIT",
 			name: "Ada",
-			stamps: "0",
+			map: "1",
 		});
 		expect(params?.success_url).toBe(
-			`${origin}/print?size=50x70&visited=FR.IT&name=Ada&stamps=0&ordered=1`,
+			`${origin}/print?size=50x70&visited=FR.IT&name=Ada&ordered=1`,
 		);
 	});
 
@@ -71,21 +71,17 @@ describe("checkoutParams", () => {
 	});
 });
 
-it("records stamps and subtitle explicitly so fulfilment prints what was ordered", () => {
+it("records the map choice and subtitle so fulfilment prints what was ordered", () => {
 	const params = checkoutParams(
-		{ size: "30x40", visited: "GB.IE", stamps: "1", subtitle: " Since 2019 " },
+		{ size: "30x40", visited: "GB.IE", map: "0", subtitle: " Since 2019 " },
 		"https://been.example",
 	);
-	expect(params?.metadata).toMatchObject({
-		stamps: "1",
-		subtitle: "Since 2019",
-	});
-	expect(params?.line_items?.[0].price_data?.product_data?.name).toMatch(
-		/with stamps/,
+	expect(params?.metadata).toMatchObject({ map: "0", subtitle: "Since 2019" });
+	expect(params?.line_items?.[0].price_data?.product_data?.name).not.toMatch(
+		/with map/,
 	);
-	const spec = parsePosterParams(new URLSearchParams("visited=IT&stamps=0"));
-	expect(spec?.stamps).toBe(false);
-	expect(parsePosterParams(new URLSearchParams("visited=IT"))?.stamps).toBe(
-		undefined,
+	expect(parsePosterParams(new URLSearchParams("visited=IT&map=0"))?.map).toBe(
+		false,
 	);
+	expect(parsePosterParams(new URLSearchParams("visited=IT"))?.map).toBe(true);
 });

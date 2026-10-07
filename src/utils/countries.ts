@@ -22,15 +22,40 @@ export function getCountryName(code: CountryCode): string {
 	}
 }
 
+export interface NativeName {
+	name: string;
+	lang: string;
+}
+
+const nativeNames = new Map<CountryCode, NativeName | null>();
+
+// The name in the country's most spoken language, as CLDR has it ("日本",
+// "Deutschland"); null when that's the English name anyway
+export function getNativeName(code: CountryCode): NativeName | null {
+	if (nativeNames.has(code)) return nativeNames.get(code) ?? null;
+	let native: NativeName | null = null;
+	try {
+		const lang = new Intl.Locale(`und-${code}`).maximize().baseName;
+		const name = new Intl.DisplayNames([lang], { type: "region" }).of(code);
+		if (name && name !== code && name !== getCountryName(code))
+			native = { name, lang };
+	} catch {}
+	nativeNames.set(code, native);
+	return native;
+}
+
 export function filterCountries(
 	codes: CountryCode[],
 	search: string,
 ): CountryCode[] {
 	const term = search.toLowerCase();
 	return codes.filter((code) =>
-		[code, getCountryName(code), getName(code) ?? ""].some((name) =>
-			name.toLowerCase().includes(term),
-		),
+		[
+			code,
+			getCountryName(code),
+			getName(code) ?? "",
+			getNativeName(code)?.name ?? "",
+		].some((name) => name.toLowerCase().includes(term)),
 	);
 }
 

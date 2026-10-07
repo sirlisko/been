@@ -8,9 +8,9 @@ interface Props {
 }
 
 const inputClass =
-	"w-full border-0 border-b-2 border-ink bg-transparent py-2 font-display text-xl text-ink placeholder:text-muted focus:outline-none focus:border-stamp-red";
+	"w-full h-12 px-3.5 rounded-lg border-[1.5px] border-line bg-page text-base text-ink placeholder:text-muted focus:outline-none focus:border-blue";
 export const buttonClass =
-	"font-mono text-[13px] uppercase tracking-wider bg-ink text-paper min-h-12 px-8 hover:bg-ink/90 disabled:opacity-50";
+	"inline-flex items-center justify-center min-h-12 px-6 rounded-lg bg-blue text-page font-semibold hover:bg-blue/90 disabled:opacity-50";
 
 export function authErrorMessage(error: AuthError): string {
 	if (error.status === 429) {
@@ -59,7 +59,7 @@ const AuthModal = ({ onClose }: Props) => {
 	};
 
 	const errorMessage = error && (
-		<p role="alert" className="text-sm text-stamp-red font-semibold">
+		<p role="alert" className="text-sm text-red font-semibold">
 			{error}
 		</p>
 	);
@@ -67,7 +67,7 @@ const AuthModal = ({ onClose }: Props) => {
 	return (
 		<Modal onClose={onClose}>
 			<div className="flex flex-col gap-6">
-				<h2 className="m-0 font-display italic font-normal text-4xl">
+				<h2 className="m-0 font-display font-bold text-3xl tracking-tight">
 					Sign In
 				</h2>
 				{step === "email" && (
@@ -80,7 +80,7 @@ const AuthModal = ({ onClose }: Props) => {
 				{step === "email" ? (
 					<form onSubmit={sendCode} className="flex flex-col gap-6">
 						<label className="flex flex-col gap-1">
-							<span className="label">Email</span>
+							<span className="font-semibold">Email</span>
 							<input
 								type="email"
 								placeholder="Email"
@@ -102,7 +102,7 @@ const AuthModal = ({ onClose }: Props) => {
 							We sent a code to <strong>{email}</strong>
 						</p>
 						<label className="flex flex-col gap-1">
-							<span className="label">Sign-in code</span>
+							<span className="font-semibold">Sign-in code</span>
 							<input
 								type="text"
 								inputMode="numeric"
@@ -126,7 +126,7 @@ const AuthModal = ({ onClose }: Props) => {
 								setCode("");
 								setError(undefined);
 							}}
-							className="label underline underline-offset-4 self-start min-h-11"
+							className="text-sm font-semibold text-blue underline underline-offset-4 self-start min-h-11"
 						>
 							Use a different email
 						</button>

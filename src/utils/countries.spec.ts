@@ -6,6 +6,7 @@ import {
 	UN_STATES,
 	filterCountries,
 	getCountryName,
+	getNativeName,
 	parseShareParam,
 	toShareParam,
 } from "./countries";
@@ -17,6 +18,21 @@ describe("getCountryName", () => {
 
 	it("falls back to the code for an unknown code", () => {
 		expect(getCountryName("XX" as CountryCode)).toBe("XX");
+	});
+});
+
+describe("getNativeName", () => {
+	it("gives the name in the country's own language", () => {
+		expect(getNativeName("DE" as CountryCode)).toEqual({
+			name: "Deutschland",
+			lang: "de-Latn-DE",
+		});
+		expect(getNativeName("GR" as CountryCode)?.name).toBe("Ελλάδα");
+	});
+
+	it("is null when that's the English name", () => {
+		expect(getNativeName("GB" as CountryCode)).toBeNull();
+		expect(getNativeName("FR" as CountryCode)).toBeNull();
 	});
 });
 
@@ -33,6 +49,12 @@ describe("filterCountries", () => {
 
 	it("also matches the official ISO name", () => {
 		expect(filterCountries(codes, "america")).toEqual(["US"]);
+	});
+
+	it("matches the name in the country's own language", () => {
+		expect(filterCountries(["DE", "JP"] as CountryCode[], "日本")).toEqual([
+			"JP",
+		]);
 	});
 
 	it("returns multiple matches", () => {

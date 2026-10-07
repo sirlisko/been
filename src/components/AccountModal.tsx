@@ -75,7 +75,7 @@ const AccountModal = ({
 	return (
 		<Modal onClose={onClose}>
 			<div className="flex flex-col gap-6">
-				<h2 className="m-0 font-display italic font-normal text-4xl">
+				<h2 className="m-0 font-display font-bold text-3xl tracking-tight">
 					Account
 				</h2>
 				<p className="m-0 -mt-3 text-sm text-muted">
@@ -84,9 +84,9 @@ const AccountModal = ({
 
 				<form onSubmit={saveName} className="flex flex-col gap-4">
 					<label className="flex flex-col gap-1">
-						<span className="label">Username</span>
-						<span className="flex items-baseline border-b-2 border-ink focus-within:border-stamp-red">
-							<span className="shrink-0 font-display text-xl text-muted">
+						<span className="font-semibold">Username</span>
+						<span className="flex items-center h-12 px-3.5 rounded-lg border-[1.5px] border-line bg-page focus-within:border-blue">
+							<span className="shrink-0 text-base text-muted">
 								{location.host}/@
 							</span>
 							<input
@@ -98,14 +98,14 @@ const AccountModal = ({
 								maxLength={20}
 								value={name}
 								onChange={(e) => setName(e.target.value)}
-								className="min-w-0 flex-1 border-0 bg-transparent py-2 font-display text-xl text-ink placeholder:text-muted/60 focus:outline-none"
+								className="min-w-0 flex-1 border-0 bg-transparent text-base text-ink placeholder:text-muted/60 focus:outline-none"
 							/>
 						</span>
 					</label>
 					{name.trim() && (
 						<label className="flex items-center justify-between gap-4 cursor-pointer">
 							<span className="flex flex-col gap-1">
-								<span className="label">Public map</span>
+								<span className="font-semibold">Public map</span>
 								<span className="text-sm text-muted">
 									{isPublic
 										? "Anyone with your link sees your latest stamps."
@@ -122,7 +122,7 @@ const AccountModal = ({
 							/>
 							<span
 								aria-hidden="true"
-								className="relative shrink-0 w-11 h-6 border border-ink bg-page peer-checked:bg-ink peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-stamp-red after:absolute after:top-0.5 after:left-0.5 after:size-[18px] after:bg-ink after:transition-transform peer-checked:after:translate-x-5 peer-checked:after:bg-paper"
+								className="relative shrink-0 w-11 h-6 rounded-full bg-land peer-checked:bg-blue peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-blue after:absolute after:top-[3px] after:left-[3px] after:size-[18px] after:rounded-full after:bg-page after:shadow after:transition-transform peer-checked:after:translate-x-5"
 							/>
 						</label>
 					)}
@@ -137,7 +137,7 @@ const AccountModal = ({
 				</form>
 
 				{error && (
-					<p role="alert" className="m-0 text-sm text-stamp-red font-semibold">
+					<p role="alert" className="m-0 text-sm text-red font-semibold">
 						{error}
 					</p>
 				)}
@@ -157,7 +157,7 @@ const AccountModal = ({
 								type="button"
 								onClick={deleteAccount}
 								disabled={submitting}
-								className="font-mono text-xs uppercase tracking-wider min-h-11 px-4 bg-stamp-red text-paper disabled:opacity-50"
+								className="inline-flex items-center min-h-11 px-4 rounded-lg bg-red text-page font-semibold disabled:opacity-50"
 							>
 								Delete forever
 							</button>
@@ -173,7 +173,7 @@ const AccountModal = ({
 						<button
 							type="button"
 							onClick={() => setConfirmDelete(true)}
-							className="font-mono text-xs md:text-[13px] uppercase tracking-wider text-stamp-red underline underline-offset-4 min-h-11 px-1"
+							className="inline-flex items-center min-h-11 px-1 font-semibold text-red underline underline-offset-4"
 						>
 							Delete account
 						</button>

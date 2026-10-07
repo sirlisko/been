@@ -9,6 +9,9 @@ export const SIZES = {
 
 export type PosterSize = keyof typeof SIZES;
 
+// Off until the shop opens; /print itself stays reachable by link
+export const printingOpen = () => import.meta.env.VITE_PRINT === "1";
+
 export interface PosterSpec {
 	size: PosterSize;
 	visited: CountryCode[];
@@ -17,8 +20,8 @@ export interface PosterSpec {
 	name?: string;
 	partner?: string;
 	subtitle?: string;
-	// Completed collections drawn as ink stamps under the map
-	stamps?: boolean;
+	// The world map above the stamps; on unless turned off
+	map?: boolean;
 }
 
 const clean = (max: number) => (text: string | null | undefined) =>
@@ -58,7 +61,7 @@ export function parsePosterParams(params: URLSearchParams): PosterSpec | null {
 		name: cleanName(params.get("name")),
 		partner: cleanName(params.get("partner")),
 		subtitle: cleanSubtitle(params.get("subtitle")),
-		stamps: params.has("stamps") ? params.get("stamps") === "1" : undefined,
+		map: params.get("map") !== "0",
 	};
 }
 
@@ -71,8 +74,7 @@ export function posterParams(spec: PosterSpec): URLSearchParams {
 	if (spec.name) params.set("name", spec.name);
 	if (spec.partner) params.set("partner", spec.partner);
 	if (spec.subtitle) params.set("subtitle", spec.subtitle);
-	// Left out until chosen, so the print page can default it on
-	if (spec.stamps !== undefined) params.set("stamps", spec.stamps ? "1" : "0");
+	if (spec.map === false) params.set("map", "0");
 	return params;
 }
 
@@ -96,7 +98,7 @@ export function checkoutParams(
 	const name = cleanName(str("name"));
 	const partner = cleanName(str("partner"));
 	const subtitle = cleanSubtitle(str("subtitle"));
-	const stamps = str("stamps") === "1";
+	const map = str("map") !== "0";
 	if (together && (!together.length || !name || !partner)) return null;
 
 	const spec: PosterSpec = {
@@ -106,7 +108,7 @@ export function checkoutParams(
 		name,
 		partner,
 		subtitle,
-		stamps,
+		map,
 	};
 	const { label, price } = SIZES[size];
 	const back = `${origin}/print?${posterParams(spec)}`;
@@ -119,7 +121,7 @@ export function checkoutParams(
 					currency: "gbp",
 					unit_amount: price,
 					product_data: {
-						name: `${together ? "Travel map together" : "Travel map"} poster${stamps ? " with stamps" : ""}, ${label}`,
+						name: `${together ? "Stamps together" : "Stamps"} poster${map ? " with map" : ""}, ${label}`,
 					},
 				},
 			},
@@ -132,7 +134,7 @@ export function checkoutParams(
 			...(name && { name }),
 			...(partner && { partner }),
 			...(subtitle && { subtitle }),
-			stamps: stamps ? "1" : "0",
+			map: map ? "1" : "0",
 		},
 		success_url: `${back}&ordered=1`,
 		cancel_url: back,

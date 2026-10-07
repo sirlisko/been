@@ -2,7 +2,7 @@ export type Theme = "light" | "dark";
 
 const THEME_KEY = "theme";
 // Browser toolbar colours, matching --paper
-const BAR_COLORS = { light: "#F3EDE2", dark: "#161C2C" };
+const BAR_COLORS = { light: "#EEF1F5", dark: "#101726" };
 
 export function storedTheme(): Theme | null {
 	try {

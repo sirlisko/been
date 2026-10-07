@@ -95,15 +95,14 @@ it("celebrates a completed collection", async () => {
 	const search = screen.getByRole("combobox");
 	await userEvent.type(search, "estonia{Enter}");
 	await userEvent.type(search, "latvia{Enter}");
-	expect(screen.queryByText("Collection complete")).not.toBeInTheDocument();
+	const banner = () => screen.queryByText("Baltic states: complete");
+	expect(banner()).not.toBeInTheDocument();
 	await userEvent.type(search, "lithuania{Enter}");
-	expect(
-		screen.getByText("Collection complete").parentElement,
-	).toHaveTextContent("Baltic states");
-	await userEvent.click(screen.getByText("Collection complete"));
-	expect(screen.getByText("Collection complete")).toBeInTheDocument();
+	expect(banner()).toBeInTheDocument();
+	await userEvent.click(banner() as HTMLElement);
+	expect(banner()).toBeInTheDocument();
 	await userEvent.click(document.body);
-	expect(screen.queryByText("Collection complete")).not.toBeInTheDocument();
+	expect(banner()).not.toBeInTheDocument();
 });
 
 it("nudges anonymous users with many stamps to sign in", async () => {
@@ -152,10 +151,10 @@ it("undoes the last stamp from the toast", async () => {
 	render(<App />);
 	await signedOut();
 	await userEvent.type(screen.getByRole("combobox"), "italy{Enter}");
-	expect(screen.getByText(/Stamped Italy/)).toBeInTheDocument();
+	expect(screen.getByText(/Added Italy/)).toBeInTheDocument();
 	await userEvent.click(screen.getByRole("button", { name: "Undo" }));
 	expect(localStorage.getItem("visitedCountries")).toBeNull();
-	expect(screen.queryByText(/Stamped Italy/)).toBeNull();
+	expect(screen.queryByText(/Added Italy/)).toBeNull();
 });
 
 it("saves a quick add then remove in order", async () => {
@@ -196,6 +195,33 @@ it("shares a snapshot link when the profile is private", async () => {
 	expect(await navigator.clipboard.readText()).toBe(
 		`${location.origin}/?visited=FR.IT`,
 	);
+});
+
+it("sends the empty stamp slot to the search", async () => {
+	render(<App />);
+	await signedOut();
+	await userEvent.click(screen.getByRole("button", { name: /Add a stamp/ }));
+	expect(screen.getByRole("combobox")).toHaveFocus();
+});
+
+it("hides printing until the shop opens", async () => {
+	render(<App />);
+	await signedOut();
+	await userEvent.type(screen.getByRole("combobox"), "italy{Enter}");
+	expect(screen.queryByRole("link", { name: "Print" })).toBeNull();
+});
+
+it("links to printing once there's a stamp", async () => {
+	vi.stubEnv("VITE_PRINT", "1");
+	render(<App />);
+	await signedOut();
+	expect(screen.queryByRole("link", { name: "Print" })).toBeNull();
+	await userEvent.type(screen.getByRole("combobox"), "italy{Enter}");
+	expect(screen.getByRole("link", { name: "Print" })).toHaveAttribute(
+		"href",
+		"/print?visited=IT",
+	);
+	vi.unstubAllEnvs();
 });
 
 it("remembers a manual dark mode choice", async () => {
