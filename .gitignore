@@ -10,3 +10,6 @@
 
 # Local Netlify folder
 .netlify
+
+# Supabase CLI state (project ref, pooler URL)
+supabase/.temp
