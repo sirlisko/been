@@ -186,7 +186,7 @@ export function checkoutParams(
 			style: style ?? "ground",
 			border: border ?? "bold",
 		},
-		success_url: `${back}&ordered=1`,
+		success_url: `${back}&ordered={CHECKOUT_SESSION_ID}`,
 		cancel_url: back,
 	};
 }

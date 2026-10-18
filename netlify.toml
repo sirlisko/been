@@ -10,6 +10,17 @@
   port = 8888
   targetPort = 5175
 
+# Umami, first-party so the CSP stays same-origin and blockers leave it alone
+[[redirects]]
+  from = "/stats/script.js"
+  to = "https://stats.sirlisko.com/script.js"
+  status = 200
+
+[[redirects]]
+  from = "/stats/api/send"
+  to = "https://stats.sirlisko.com/api/send"
+  status = 200
+
 [[redirects]]
   from = "/print"
   to = "/index.html"

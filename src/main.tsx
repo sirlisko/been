@@ -5,6 +5,7 @@ import "./styles/index.css";
 import App from "./App.tsx";
 import PrintPage from "./components/PrintPage.tsx";
 import SharedMap, { ProfileMap } from "./components/SharedMap.tsx";
+import { loadAnalytics } from "./lib/analytics.ts";
 import { rememberSharedMap } from "./lib/localCountries.ts";
 import { applyTheme, storedTheme } from "./lib/theme.ts";
 import { parseShareParam } from "./utils/countries.ts";
@@ -12,6 +13,7 @@ import { parsePosterParams } from "./utils/poster.ts";
 import { parseShareName } from "./utils/shareMeta.ts";
 
 applyTheme(storedTheme());
+loadAnalytics();
 
 const params = new URLSearchParams(location.search);
 const shared = parseShareParam(params.get("visited"));
@@ -31,7 +33,7 @@ createRoot(document.getElementById("root")!).render(
 			<PrintPage
 				spec={poster}
 				fulfil={params.has("fulfil")}
-				ordered={params.has("ordered")}
+				ordered={params.get("ordered") ?? undefined}
 			/>
 		) : username ? (
 			<ProfileMap username={username.toLowerCase()} />
