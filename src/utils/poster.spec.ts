@@ -41,7 +41,7 @@ describe("checkoutParams", () => {
 			border: "bold",
 		});
 		expect(params?.success_url).toBe(
-			`${origin}/print?size=50x70&visited=FR.IT&name=Ada&ordered=1`,
+			`${origin}/print?size=50x70&visited=FR.IT&name=Ada&ordered={CHECKOUT_SESSION_ID}`,
 		);
 	});
 

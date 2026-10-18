@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { track, trackOnce } from "../lib/analytics";
 import { useFlags } from "../utils/flagArt";
 import {
 	BORDERS,
@@ -22,7 +23,8 @@ interface Props {
 	spec: PosterSpec;
 	// Our own view for sending an order to the printer
 	fulfil?: boolean;
-	ordered?: boolean;
+	// Stripe's checkout session id, once paid
+	ordered?: string;
 }
 
 const inputClass =
@@ -62,6 +64,13 @@ const PrintPage = ({ spec: initial, fulfil, ordered }: Props) => {
 		document.title = "Been — Print your stamps";
 	}, []);
 
+	useEffect(() => {
+		if (fulfil) return;
+		const map = together ? "together" : "solo";
+		if (ordered) trackOnce(ordered, "order_paid", { map });
+		else track("print_view", { map });
+	}, [fulfil, ordered, together]);
+
 	if (fulfil) {
 		return (
 			<div className="p-4 print:p-0 flex flex-col items-start gap-4">
@@ -94,6 +103,14 @@ const PrintPage = ({ spec: initial, fulfil, ordered }: Props) => {
 			});
 			if (!response.ok) throw new Error(`Checkout failed: ${response.status}`);
 			const { url } = await response.json();
+			track("checkout_open", {
+				map: together ? "together" : "solo",
+				size,
+				style,
+				border,
+				worldMap: map ? "on" : "off",
+				countries: countries.length,
+			});
 			location.assign(url);
 		} catch (e) {
 			console.error(e);

@@ -24,6 +24,8 @@ self.addEventListener("fetch", (event) => {
 	const { request } = event;
 	const url = new URL(request.url);
 	if (request.method !== "GET" || url.origin !== location.origin) return;
+	// Umami, proxied: always the current tracker
+	if (url.pathname.startsWith("/stats/")) return;
 
 	if (request.mode === "navigate") {
 		event.respondWith(
